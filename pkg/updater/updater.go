@@ -20,6 +20,14 @@ const (
 	arch				string = runtime.GOARCH
 )
 
+type Mode string
+
+const (
+	Loud Mode = "Loud"
+	OnUpdate Mode = "OnUpdate"
+)
+
+
 var binaryFileName string
 
 var Latest Release
@@ -82,8 +90,10 @@ func Get_Release() (Release, error) {
 	return Release{}, nil
 }
 
-func CheckForUpdate(currentVersion string) (HasUpdatesToInstall, error) {
-	fmt.Printf("\033[36m[-] Checking version...\n\033[0m")
+func CheckForUpdate(currentVersion string, mode Mode) (HasUpdatesToInstall, error) {
+	if mode == Loud {
+		fmt.Printf("\033[36m[-] Checking version...\n\033[0m")
+	}
 	release, err := Get_Release()
 	if err != nil {
 		return HasUpdatesToInstall{}, err
@@ -109,7 +119,9 @@ func CheckForUpdate(currentVersion string) (HasUpdatesToInstall, error) {
 			Assets: release.Assets,
 		}, nil
 	}
-	fmt.Printf("\033[39m[+] You already have the latest available version installed...\n\033[0m")
+	if mode == Loud {
+		fmt.Printf("\033[39m[+] You already have the latest available version installed...\n\033[0m")
+	}
 	return HasUpdatesToInstall{}, nil
 }
 
@@ -129,8 +141,8 @@ func SelectAsset(assets []Release_Asset) (Release_Asset, error)  {
 	return Release_Asset{}, fmt.Errorf("sorry, but binary for your system (%s) is not available for install. Please compile it manually.", goosarch)
 }
 
-func InstallUpdate(currentVersion string) error {
-	if updates, err := CheckForUpdate(currentVersion); err == nil {
+func InstallUpdate(currentVersion string, mode Mode) error {
+	if updates, err := CheckForUpdate(currentVersion, mode); err == nil {
 		if updates.LatestVersion != "" {
 			var updateSuccess bool = false
 			asset, err := SelectAsset(updates.Assets)

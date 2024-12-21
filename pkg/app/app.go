@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const Version string = "v2.5.2-dev.2"
+const Version string = "v2.5.2-dev.3"
 
 func Run() {
 	// checking if there's any command used
@@ -20,7 +20,7 @@ func Run() {
 			switch command {
 			case "version":
 				fmt.Printf("\033[33mBuild version: %s\033[0m\r\n", Version)
-				if updates, err := updater.CheckForUpdate(Version); err == nil {
+				if updates, err := updater.CheckForUpdate(Version, updater.Loud); err == nil {
 					if updates.LatestVersion != "" {
 						fmt.Printf("\033[31mNewer version available to install: %v\033[0m\n\033[36mUse %v update - to install an update\033[0m\r\n", updates.LatestVersion, updates.ExecutableName)
 					}
@@ -29,7 +29,7 @@ func Run() {
 					return
 				}
 			case "update":
-				err := updater.InstallUpdate(Version)
+				err := updater.InstallUpdate(Version, updater.Loud)
 				if err != nil {
 					fmt.Printf("error: updater: %v\n", err)
 					return
@@ -38,7 +38,7 @@ func Run() {
 			return
 		}
 		// checking for update if we are running a tool
-		if updates, err := updater.CheckForUpdate(Version); err == nil {
+		if updates, err := updater.CheckForUpdate(Version, updater.OnUpdate); err == nil {
 			if updates.LatestVersion != "" {
 				fmt.Printf("\033[31m[!] There's a new update available to install, to update run \"%v update\"\r\n\033[0m", updates.ExecutableName)
 			}

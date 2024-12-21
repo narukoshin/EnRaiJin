@@ -47,5 +47,5 @@ func (m *Middleware) Do() error {
 		}
 		return nil
 	}
-	return fmt.Errorf("no plugin found or failed")
+	return nil
 }
