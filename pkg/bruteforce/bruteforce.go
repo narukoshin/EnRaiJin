@@ -64,7 +64,7 @@ var (
 
 	// adding some error messages
 	ErrNoPasswords 				= errors.New("there is no passwords available for bruteforce, please specify some passwords")
-	ErrOpeningFile 				= errors.New("we have issues with opening a file, make sure that file exists and is readable")
+	ErrOpeningWordlist 			= errors.New("we have issues with opening a wordlist file, make sure that file exists and is readable")
 	ErrWrongType   				= errors.New("you specified the wrong source of dictionary, allowed types are (file, list)")
 	ErrEmptyField  				= errors.New("the field that you want to bruteforce is empty")
 	ErrTooMuchThreads			= errors.New("too much threads for such small wordlist, please decrease amount of threads") 
@@ -111,7 +111,7 @@ func Dictionary() ([][]string, error) {
 		case "file":
 			contents, err := ioutil.ReadFile(File)
 			if err != nil {
-				return nil, ErrOpeningFile
+				return nil, ErrOpeningWordlist
 			}
 			wordlist = strings.Split(string(contents), "\n")
 	}
