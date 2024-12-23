@@ -1,4 +1,4 @@
-module custom-bruteforce
+module EnRaiJin
 
 go 1.17
 

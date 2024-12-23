@@ -1,11 +1,12 @@
 package config
 
 import (
-	"custom-bruteforce/pkg/structs"
 	"errors"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
+	
+	"EnRaiJin/pkg/structs"
 )
 
 // the default config name that we will load.

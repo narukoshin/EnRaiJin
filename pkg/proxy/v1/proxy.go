@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"custom-bruteforce/pkg/structs"
-	"custom-bruteforce/pkg/config"
 	"golang.org/x/net/proxy"
 	"h12.io/socks"
 	"crypto/tls"
@@ -10,6 +8,9 @@ import (
 	"net/url"
 	"time"
 	"net"
+	
+	"EnRaiJin/pkg/structs"
+	"EnRaiJin/pkg/config"
 )
 
 var Proxy structs.YAMLProxy =  config.YAMLConfig.P

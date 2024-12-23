@@ -1,9 +1,10 @@
 package headers
 
 import (
-	"custom-bruteforce/pkg/config"
-	"custom-bruteforce/pkg/structs"
 	"strings"
+	
+	"EnRaiJin/pkg/config"
+	"EnRaiJin/pkg/structs"
 )
 
 func Is() bool {

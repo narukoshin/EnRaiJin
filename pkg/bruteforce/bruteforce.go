@@ -4,13 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
-	"custom-bruteforce/pkg/config"
-	"custom-bruteforce/pkg/middleware"
-	"custom-bruteforce/pkg/email"
-	"custom-bruteforce/pkg/headers"
-	proxy "custom-bruteforce/pkg/proxy/v2"
-	"custom-bruteforce/pkg/site"
-	"custom-bruteforce/pkg/structs"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +18,14 @@ import (
 	"strings"
 	"sync"
 	"time"
+	
+	"EnRaiJin/pkg/config"
+	"EnRaiJin/pkg/middleware"
+	"EnRaiJin/pkg/email"
+	"EnRaiJin/pkg/headers"
+	proxy "EnRaiJin/pkg/proxy/v2"
+	"EnRaiJin/pkg/site"
+	"EnRaiJin/pkg/structs"
 )
 
 var (

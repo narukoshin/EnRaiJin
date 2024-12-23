@@ -8,9 +8,9 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"custom-bruteforce/pkg/structs"
-	"custom-bruteforce/pkg/config"
-	"custom-bruteforce/pkg/headers"
+	"EnRaiJin/pkg/structs"
+	"EnRaiJin/pkg/config"
+	"EnRaiJin/pkg/headers"
 )
 
 

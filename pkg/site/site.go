@@ -1,15 +1,16 @@
 	package site
 
 import (
-	"custom-bruteforce/pkg/config"
-	"custom-bruteforce/pkg/structs"
-	proxy "custom-bruteforce/pkg/proxy/v1"
 	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"strings"
 	"time"
+	
+	"EnRaiJin/pkg/config"
+	"EnRaiJin/pkg/structs"
+	proxy "EnRaiJin/pkg/proxy/v1"
 )
 
 var (

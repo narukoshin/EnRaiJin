@@ -1,11 +1,12 @@
 package middleware
 
 import (
-	"custom-bruteforce/pkg/config"
 	"fmt"
 	"net/http"
 	"os"
 	"plugin"
+	
+	"EnRaiJin/pkg/config"
 )
 
 var (

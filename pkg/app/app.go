@@ -1,13 +1,14 @@
 package app
 
 import (
-	"custom-bruteforce/pkg/bruteforce"
-	"custom-bruteforce/pkg/config"
-	"custom-bruteforce/pkg/email"
-	"custom-bruteforce/pkg/site"
-	"custom-bruteforce/pkg/updater"
 	"fmt"
 	"os"
+	
+	"EnRaiJin/pkg/bruteforce"
+	"EnRaiJin/pkg/config"
+	"EnRaiJin/pkg/email"
+	"EnRaiJin/pkg/site"
+	"EnRaiJin/pkg/updater"
 )
 
 const Version string = "v2.5.2-dev.4"

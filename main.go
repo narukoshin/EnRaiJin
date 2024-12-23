@@ -1,6 +1,6 @@
 package main
 
-import "custom-bruteforce/pkg/app"
+import "EnRaiJin/pkg/app"
 
 func main() {
 	app.Run()

@@ -2,15 +2,16 @@ package email
 
 import (
 	"crypto/tls"
-	"custom-bruteforce/pkg/config"
-	s "custom-bruteforce/pkg/structs"
-	p "custom-bruteforce/pkg/proxy/v1"
 	"errors"
 	"fmt"
 	"net"
 	"net/smtp"
 	"strings"
 	"time"
+	
+	"EnRaiJin/pkg/config"
+	s "EnRaiJin/pkg/structs"
+	p "EnRaiJin/pkg/proxy/v1"
 )
 
 var (

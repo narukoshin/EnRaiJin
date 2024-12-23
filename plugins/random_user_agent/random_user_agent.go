@@ -1,9 +1,10 @@
 package main
 
 import (
-	"custom-bruteforce/pkg/middleware"
 	"math/rand"
 	"time"
+	
+	"EnRaiJin/pkg/middleware"
 )
 
 type UserAgentPlugin struct{}
