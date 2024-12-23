@@ -361,7 +361,8 @@ func _run_attack(pass string) error {
 			}
 
 			if AttackFail.Try_count == 10 {
-                Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: fmt.Sprintf("Something went wrong: Password try: %v", AttackFail)}
+				password_try, _ := json.Marshal(AttackFail)
+                Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: fmt.Sprintf("Something went wrong / \n\t%s / \n\tPassword try: %q", err, string(password_try))}
 				return nil
 			}
 
@@ -369,8 +370,12 @@ func _run_attack(pass string) error {
 		}
 		// Resetting fail count in case it recovered and moved to other passwords.
 		AttackFail = Attack_Fail{}
-		defer resp.Body.Close()
 
+		if resp == nil {
+			return nil
+		}
+		defer resp.Body.Close()
+		
 		if Debug {
 			fmt.Println(resp)
 		}
