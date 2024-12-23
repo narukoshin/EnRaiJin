@@ -8,7 +8,7 @@ import (
 	"custom-bruteforce/pkg/middleware"
 	"custom-bruteforce/pkg/email"
 	"custom-bruteforce/pkg/headers"
-	"custom-bruteforce/pkg/proxy"
+	proxy "custom-bruteforce/pkg/proxy/v2"
 	"custom-bruteforce/pkg/site"
 	"custom-bruteforce/pkg/structs"
 	"encoding/json"
