@@ -3,7 +3,7 @@
 import (
 	"custom-bruteforce/pkg/config"
 	"custom-bruteforce/pkg/structs"
-	"custom-bruteforce/pkg/proxy"
+	proxy "custom-bruteforce/pkg/proxy/v1"
 	"errors"
 	"fmt"
 	"net"

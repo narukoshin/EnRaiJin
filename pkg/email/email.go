@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"custom-bruteforce/pkg/config"
 	s "custom-bruteforce/pkg/structs"
-	p "custom-bruteforce/pkg/proxy"
+	p "custom-bruteforce/pkg/proxy/v1"
 	"errors"
 	"fmt"
 	"net"
