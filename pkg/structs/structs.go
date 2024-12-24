@@ -48,7 +48,7 @@ type YAMLProxy struct {
 	Socks string `yaml:"socks"`
 
 	// v2
-	Url string `yaml:"url"`
+	Addr string `yaml:"addr"`
 	Timeout string `yaml:"timeout"`
 	VerifyUrl string `yaml:"verify_url"`
 }
