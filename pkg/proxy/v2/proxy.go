@@ -40,13 +40,13 @@ func init() {
 			return
 		}
 		Timeout = timeout
-		if VerifyUrl == "" { VerifyUrl = "http://httpbin.org/ip" }
-
+		
 		if err = VerifyProxyConnection(TCP); err != nil {
 			config.CError = fmt.Errorf("proxy setup failed: %w", err)
 			return
 		}
 	}
+	if VerifyUrl == "" { VerifyUrl = "http://httpbin.org/ip" }
 }
 
 func VerifyProxyConnection(method verifyMethod) error {
@@ -95,7 +95,7 @@ func VerifyProxyConnection(method verifyMethod) error {
 }
 
 func Apply(client *http.Client) error {
-	url, err := url.Parse(Proxy.Url)
+	url, err := url.Parse(Proxy.Addr)
 	if err != nil {
 		return ErrInvalidProxyURL
 	}
@@ -110,7 +110,7 @@ func Apply(client *http.Client) error {
 }
 
 func Dial() (proxy.Dialer, error) {
-	url, err := url.Parse(Proxy.Url)
+	url, err := url.Parse(Proxy.Addr)
 	if err != nil {
 		return nil, err
 	}
