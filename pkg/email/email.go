@@ -1,3 +1,4 @@
+// Deprecated: Mail feature is not working properly
 package email
 
 import (
@@ -11,7 +12,7 @@ import (
 	
 	"EnRaiJin/pkg/config"
 	s "EnRaiJin/pkg/structs"
-	p "EnRaiJin/pkg/proxy/v1"
+	p "EnRaiJin/pkg/proxy/v2"
 )
 
 var (
@@ -79,12 +80,16 @@ func Test_Connection() (net.Conn, *smtp.Client, error) {
 			return nil, nil, ErrEmptyrecps
 		}
 		// testing if we can connect to the server
-		if Server.Timeout == 0 {
-			Server.Timeout = 30
+		if Server.Timeout == "" {
+			Server.Timeout = "30s"
 		}
 		var conn net.Conn
 		if p.IsProxy() {
-			dialer, err := p.Dialer(time.Duration(Server.Timeout))
+			err := p.SetTimeout(Server.Timeout)
+			if err != nil {
+				return nil, nil, err
+			}
+			dialer, err := p.Dial()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -94,7 +99,11 @@ func Test_Connection() (net.Conn, *smtp.Client, error) {
 			}
 		} else {
 			var err error
-			conn, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%s", Server.Host, Server.Port), time.Second * time.Duration(Server.Timeout))
+			timeout, err := time.ParseDuration(Server.Timeout)
+			if err != nil {
+				return nil, nil, err
+			}
+			conn, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%s", Server.Host, Server.Port), timeout)
 			if err != nil {
 				return nil, nil, err
 			}

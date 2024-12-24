@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 	
+	"EnRaiJin/pkg/common"
 	"EnRaiJin/pkg/config"
 	"EnRaiJin/pkg/structs"
-	proxy "EnRaiJin/pkg/proxy/v1"
+	proxy "EnRaiJin/pkg/proxy/v2"
 )
 
 var (
@@ -44,24 +45,19 @@ func Verify_Host() error {
 		return err
 	}
 	// getting the host port from the scheme that is specified in the config
-	port := func() (port int) {
-		if url.Scheme == "https" {
-			return 443
-		}
-		return 80
-	}
+	port := common.FindPort(url)
 	// checking if the host is alive
 
 	if proxy.IsProxy(){ // checking with the proxy
-		dialer, err := proxy.Dialer(3)
+		dialer, err := proxy.Dial()
 		if err != nil {
 			return err
 		}
-		if _, err := dialer.Dial("tcp", fmt.Sprintf("%s:%d", url.Host, port())); err != nil {
+		if _, err := dialer.Dial("tcp", fmt.Sprintf("%s:%d", url.Host, port)); err != nil {
 			return err
 		}
 	} else { // checking without the proxy
-		if _, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", url.Host, port()), 3 * time.Second); err != nil {
+		if _, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", url.Host, port), 3 * time.Second); err != nil {
 			return ErrDeadHost
 		}
 	}

@@ -79,7 +79,7 @@ email:
   server:
     host: your.server.name
     port: 587
-    timeout: 3 # default 30
+    timeout: 3s # default 30s
     email: your.email@address.com
     password: your.password123
 

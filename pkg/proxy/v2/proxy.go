@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"golang.org/x/net/proxy"
 
+	"EnRaiJin/pkg/common"
 	"EnRaiJin/pkg/structs"
 	"EnRaiJin/pkg/config"
 	"EnRaiJin/pkg/headers"
@@ -34,12 +35,12 @@ const (
 
 func init() {
 	if IsProxy() {
-		timeout, err := time.ParseDuration(Proxy.Timeout)
+		var err error
+		Timeout, err = time.ParseDuration(Proxy.Timeout)
 		if err != nil {
 			config.CError = ErrTimeoutConversion
 			return
 		}
-		Timeout = timeout
 		
 		if err = VerifyProxyConnection(TCP); err != nil {
 			config.CError = fmt.Errorf("proxy setup failed: %w", err)
@@ -47,6 +48,15 @@ func init() {
 		}
 	}
 	if VerifyUrl == "" { VerifyUrl = "http://httpbin.org/ip" }
+}
+
+func SetTimeout(timeout string) error {
+	var err error
+	Timeout, err = time.ParseDuration(timeout)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func VerifyProxyConnection(method verifyMethod) error {
@@ -60,12 +70,7 @@ func VerifyProxyConnection(method verifyMethod) error {
 		if err != nil {
             return err
         }
-		port := func() int {
-			if url.Scheme == "https" {
-                return 443
-            }
-            return 80
-		}()
+		port := common.FindPort(url)
 		addr := fmt.Sprintf("%s:%d", url.Host, port)
 		if _, err := dialer.Dial("tcp", addr); err != nil {
 			return err
