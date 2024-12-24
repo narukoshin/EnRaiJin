@@ -64,7 +64,14 @@ crawl: # optional
   
 # if you want to tunnel all the requests through the proxy
 proxy: # optional
+    # v1 way (deprecated, only email feature uses it at the moment)
     socks: socks5://127.0.0.1:9050?timeout=5s # for Tor proxy
+
+    # v2 way
+    addr: socks5://127.0.0.1:9050
+    timeout: 5s # optional
+    verify_url: http://httpbin.org/ip # custom URL for checking if the proxy is working properly
+
 
 # email settings
 email:
