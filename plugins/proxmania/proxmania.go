@@ -20,7 +20,7 @@ import (
 type Proxmania struct{}
 
 var (
-	Version string = "v1.0-beta.1"
+	Version string = "v1.0-beta.2"
 	Author  string = "ENKO"
 	ProxySourceURL string = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/socks5/data.txt"
 
