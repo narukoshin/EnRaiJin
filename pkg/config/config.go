@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	
 	"EnRaiJin/pkg/structs"
@@ -26,7 +25,7 @@ var (
 
 	// Error message if the include file doesn't exist
 	// Almost duplication of ErrConfigNotFound
-	ErrIncludeNotFound = errors.New("One or more include files not found")
+	ErrIncludeNotFound = errors.New("one or more include files not found")
 )
 
 func init() {
@@ -75,7 +74,7 @@ func load_file(file_name string) []byte {
 		return nil
 	}
 	// Reading config file
-	yml, err := ioutil.ReadFile(file_name)
+	yml, err := os.ReadFile(file_name)
 	if err != nil {
 		CError = err
 		return nil
