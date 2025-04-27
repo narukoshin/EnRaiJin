@@ -1,6 +1,6 @@
 module EnRaiJin
 
-go 1.17
+go 1.24.2
 
 require (
 	golang.org/x/net v0.32.0
