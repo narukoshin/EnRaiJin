@@ -64,7 +64,7 @@ crawl: # optional
   
 # if you want to tunnel all the requests through the proxy
 proxy: # optional
-    # v1 way (deprecated, only email feature uses it at the moment)
+    # v1 way (deprecated, soon will be removed)
     socks: socks5://127.0.0.1:9050?timeout=5s # for Tor proxy
 
     # v2 way

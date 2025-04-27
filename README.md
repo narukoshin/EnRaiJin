@@ -147,7 +147,13 @@ crawl:
 
 # To apply proxy setting use this option.
 proxy:
+    # v1 way (deprecated, soon will be removed)
     socks: socks5://127.0.0.1:9050?timeout=5s # for Tor proxy
+
+    # v2 way
+    addr: socks5://127.0.0.1:9050
+    timeout: 5s # optional
+    verify_url: http://httpbin.org/ip # custom URL for checking if the proxy is working properly
     
 # email settings
 email:
