@@ -34,6 +34,7 @@ const (
 )
 
 func init() {
+	if VerifyUrl == "" { VerifyUrl = "http://httpbin.org/ip" }
 	if IsProxy() {
 		var err error
 		Timeout, err = time.ParseDuration(Proxy.Timeout)
@@ -43,11 +44,10 @@ func init() {
 		}
 		
 		if err = VerifyProxyConnection(TCP); err != nil {
-			config.CError = fmt.Errorf("proxy setup failed: %w", err)
-			return
+			// config.CError = fmt.Errorf("proxy: connection verification failed: %w", err)
+			// return
 		}
 	}
-	if VerifyUrl == "" { VerifyUrl = "http://httpbin.org/ip" }
 }
 
 func SetTimeout(timeout string) error {
