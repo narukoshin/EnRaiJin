@@ -11,7 +11,7 @@ import (
 	"EnRaiJin/pkg/updater"
 )
 
-const Version string = "v2.5.2-dev.4"
+const Version string = "v2.5.2"
 
 func Run() {
 	// checking if there's any command used
