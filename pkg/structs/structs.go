@@ -75,7 +75,7 @@ type YAMLEmail struct {
 
 type YAMLEmailServer struct {
 	Host    string `yaml:"host"`
-	Port    string `yaml:"port"`
+	Port    int	   `yaml:"port"`
 	Timeout string `yaml:"timeout"`
 
 	Email    string `yaml:"email"`

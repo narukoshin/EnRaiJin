@@ -21,7 +21,7 @@ import (
 	
 	"EnRaiJin/pkg/config"
 	"EnRaiJin/pkg/middleware"
-	"EnRaiJin/pkg/email"
+	"EnRaiJin/pkg/mail"
 	"EnRaiJin/pkg/headers"
 	proxy "EnRaiJin/pkg/proxy/v2"
 	"EnRaiJin/pkg/site"
@@ -430,7 +430,14 @@ func _attack_finished() (err error){
 		fmt.Printf("\033[32m[~] elapsed time: %v, started %v\033[0m\n", time.Since(Start_Time), started)
 		// there we will save the password
 		WritePasswordToFile()
-		err = email.Send_Message(Attack.Password)
+		// err = email.Send_Message(Attack.Password)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// v2
+		mail.Set_Password(Attack.Password)
+		err = mail.Send()
 		if err != nil {
 			return err
 		}
