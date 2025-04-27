@@ -5,7 +5,6 @@ import (
 	"net"
 	"strings"
 	"time"
-	"fmt"
 
 	gomail "gopkg.in/mail.v2"
 
