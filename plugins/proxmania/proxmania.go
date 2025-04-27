@@ -1,17 +1,19 @@
 package main
 
 import (
-	"net/http"
-	"time"
-	"fmt"
-	"io/ioutil"
 	"bufio"
+	"encoding/json"
+	"fmt"
+	"io"
 	"math/rand"
-	"sync"
+	"net/http"
+	"os"
 	"sort"
+	"sync"
+	"time"
 
-	"EnRaiJin/pkg/proxy/v2"
 	"EnRaiJin/pkg/middleware"
+	"EnRaiJin/pkg/proxy/v2"
 )
 
 
@@ -58,8 +60,22 @@ func (p Proxmania) Run(mw *middleware.Middleware) error {
 	return nil
 }
 
+func WriteToFile(proxies []ProxyResult) error {
+	file, err := os.OpenFile("proxylist.json", os.O_CREATE|os.O_WRONLY, 0744)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	jsonData, err := json.Marshal(proxies)
+	if err != nil {
+		return err
+	}
+	file.Write(jsonData)
+	return nil
+}
+
 func init() {
-	rand.Seed(time.Now().UnixNano())
 	// Printing some information about the plugin.
 	fmt.Println("\033[1;31m[/!] Plugin 'Proxmania' initializing...\033[0m")
 	fmt.Printf("\033[1;31m[-] Version: %s\033[0m\n", Version)
@@ -73,6 +89,7 @@ func init() {
 		panic(err)
 	}
 	CheckAndFilter()
+	WriteToFile(topProxies)
 }
 
 func RandomProxy() ProxyResult {
@@ -136,11 +153,12 @@ func Check_WorkingProxies(proxy string) (ProxyResult) {
 	if err != nil {
 		return ProxyResult{ Proxy: proxy, Status: StatusDead, ResponseTime: 0, BodyResponse: err.Error(), }
 	}
+
 	defer resp.Body.Close()
 	duration := time.Since(start).Seconds()
 
 	if resp.StatusCode == http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return ProxyResult{ Proxy: proxy, Status: StatusBad, ResponseTime: duration, BodyResponse: err.Error() }
 		}
