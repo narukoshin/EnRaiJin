@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -110,7 +109,7 @@ func Dictionary() ([][]string, error) {
 		case "list":
 			wordlist = List
 		case "file":
-			contents, err := ioutil.ReadFile(File)
+			contents, err := os.ReadFile(File)
 			if err != nil {
 				return nil, ErrOpeningWordlist
 			}
@@ -384,7 +383,7 @@ func _run_attack(pass string) error {
 		// TODO: that would be a good idea to add an ignore option for this.
 		if resp.StatusCode == http.StatusNotFound{
 			if Debug {
-				body, err := ioutil.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					return err
 				}
@@ -393,7 +392,7 @@ func _run_attack(pass string) error {
 			Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: "The server says 404"}
 			return nil
 		} else {
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return err
 			}
@@ -456,7 +455,7 @@ func WritePasswordToFile(){
 	// checking if the "output" option is added
 	if len(Output) != 0 {
 		// writting password to the file
-		ioutil.WriteFile(Output, []byte(Attack.Password), 0644)
+		os.WriteFile(Output, []byte(Attack.Password), 0644)
 	}
 }
 
@@ -485,7 +484,7 @@ func Bypassing_Security_Token(client *http.Client) (string, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return "", err
 		}
