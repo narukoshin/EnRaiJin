@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/common"
-	"github.com/naruoshin/EnRaiJin/pkg/config"
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
-	proxy "github.com/naruoshin/EnRaiJin/pkg/proxy/v2"
+	"github.com/narukoshin/EnRaiJin/pkg/common"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
+	proxy "github.com/narukoshin/EnRaiJin/pkg/proxy/v2"
 )
 
 var (

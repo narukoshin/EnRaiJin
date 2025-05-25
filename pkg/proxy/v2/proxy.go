@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"golang.org/x/net/proxy"
 
-	"github.com/naruoshin/EnRaiJin/pkg/common"
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
-	"github.com/naruoshin/EnRaiJin/pkg/config"
-	"github.com/naruoshin/EnRaiJin/pkg/headers"
+	"github.com/narukoshin/EnRaiJin/pkg/common"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/headers"
 )
 
 

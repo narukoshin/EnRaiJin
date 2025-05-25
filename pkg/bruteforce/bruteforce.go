@@ -18,13 +18,13 @@ import (
 	"sync"
 	"time"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/config"
-	"github.com/naruoshin/EnRaiJin/pkg/middleware"
-	"github.com/naruoshin/EnRaiJin/pkg/mail"
-	"github.com/naruoshin/EnRaiJin/pkg/headers"
-	proxy "github.com/naruoshin/EnRaiJin/pkg/proxy/v2"
-	"github.com/naruoshin/EnRaiJin/pkg/site"
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/middleware"
+	"github.com/narukoshin/EnRaiJin/pkg/mail"
+	"github.com/narukoshin/EnRaiJin/pkg/headers"
+	proxy "github.com/narukoshin/EnRaiJin/pkg/proxy/v2"
+	"github.com/narukoshin/EnRaiJin/pkg/site"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
 )
 
 var (

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/naruoshin/EnRaiJin/pkg/app"
+import "github.com/narukoshin/EnRaiJin/pkg/app"
 
 func main() {
 	app.Run()

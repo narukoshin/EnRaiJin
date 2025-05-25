@@ -3,8 +3,8 @@ package headers
 import (
 	"strings"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/config"
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
 )
 
 func Is() bool {

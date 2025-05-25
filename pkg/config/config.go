@@ -5,7 +5,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
 )
 
 // the default config name that we will load.

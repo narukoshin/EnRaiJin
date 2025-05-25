@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/bruteforce"
-	"github.com/naruoshin/EnRaiJin/pkg/config"
-	"github.com/naruoshin/EnRaiJin/pkg/mail"
-	"github.com/naruoshin/EnRaiJin/pkg/site"
-	"github.com/naruoshin/EnRaiJin/pkg/updater"
+	"github.com/narukoshin/EnRaiJin/pkg/bruteforce"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/mail"
+	"github.com/narukoshin/EnRaiJin/pkg/site"
+	"github.com/narukoshin/EnRaiJin/pkg/updater"
 )
 
 const Version string = "v2.5.3"

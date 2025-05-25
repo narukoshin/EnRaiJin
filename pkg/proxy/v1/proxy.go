@@ -9,8 +9,8 @@ import (
 	"time"
 	"net"
 	
-	"github.com/naruoshin/EnRaiJin/pkg/structs"
-	"github.com/naruoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
+	"github.com/narukoshin/EnRaiJin/pkg/config"
 )
 
 var Proxy structs.YAMLProxy =  config.YAMLConfig.P
