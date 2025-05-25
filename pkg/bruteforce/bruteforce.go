@@ -378,7 +378,6 @@ func _run_attack(pass string) error {
 		if Debug {
 			fmt.Println(resp)
 		}
-
 		// if server says that page doesn't exists then we are stopping the script.
 		// TODO: that would be a good idea to add an ignore option for this.
 		if resp.StatusCode == http.StatusNotFound{
@@ -429,12 +428,7 @@ func _attack_finished() (err error){
 		fmt.Printf("\033[32m[~] elapsed time: %v, started %v\033[0m\n", time.Since(Start_Time), started)
 		// there we will save the password
 		WritePasswordToFile()
-		// err = email.Send_Message(Attack.Password)
-		// if err != nil {
-		// 	return err
-		// }
-
-		// v2
+		// sending an email if enabled
 		mail.Set_Password(Attack.Password)
 		err = mail.Send()
 		if err != nil {
