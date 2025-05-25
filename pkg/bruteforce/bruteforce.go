@@ -504,7 +504,10 @@ func Find_Token(client *http.Client) (token string) {
 		}
 	// Checking if the Crawl_Name is added because it's a very important option
 	if len(Crawl_Name) == 0 {
-		Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: err.Error()}
+		Attack = Attack_Result {
+			Status: StatusFinished,
+			Stop: true,
+		}
 		return ""
 	}
 	return
