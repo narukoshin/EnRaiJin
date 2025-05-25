@@ -8,9 +8,9 @@ import (
 
 	gomail "gopkg.in/mail.v2"
 
-	"EnRaiJin/pkg/config"
-	p "EnRaiJin/pkg/proxy/v2"
-	s "EnRaiJin/pkg/structs"
+	"github.com/naruoshin/EnRaiJin/pkg/config"
+	p "github.com/naruoshin/EnRaiJin/pkg/proxy/v2"
+	s "github.com/naruoshin/EnRaiJin/pkg/structs"
 )
 
 var (

@@ -1,4 +1,4 @@
-module EnRaiJin
+module github.com/naruoshin/EnRaiJin
 
 go 1.24.2
 

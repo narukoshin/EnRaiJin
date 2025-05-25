@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 	
-	"EnRaiJin/pkg/middleware"
+	"github.com/naruoshin/EnRaiJin/pkg/middleware"
 )
 
 type UserAgentPlugin struct{}

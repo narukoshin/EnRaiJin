@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	
-	"EnRaiJin/pkg/bruteforce"
-	"EnRaiJin/pkg/config"
-	"EnRaiJin/pkg/mail"
-	"EnRaiJin/pkg/site"
-	"EnRaiJin/pkg/updater"
+	"github.com/naruoshin/EnRaiJin/pkg/bruteforce"
+	"github.com/naruoshin/EnRaiJin/pkg/config"
+	"github.com/naruoshin/EnRaiJin/pkg/mail"
+	"github.com/naruoshin/EnRaiJin/pkg/site"
+	"github.com/naruoshin/EnRaiJin/pkg/updater"
 )
 
-const Version string = "v2.5.2"
+const Version string = "v2.5.3-dev"
 
 func Run() {
 	// checking if there's any command used
@@ -60,7 +60,7 @@ func Run() {
 		fmt.Printf("error: site: %v\n", err)
 		return
 	}
-	if err := mail.Ping(); err != nil {
+	if err := mail.Test(); err != nil {
 		fmt.Printf("error: mail: %v\n", err)
 		return
 	}

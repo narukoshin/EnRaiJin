@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"EnRaiJin/pkg/middleware"
-	"EnRaiJin/pkg/proxy/v2"
+	"github.com/naruoshin/EnRaiJin/pkg/middleware"
+	"github.com/naruoshin/EnRaiJin/pkg/proxy/v2"
 )
 
 
