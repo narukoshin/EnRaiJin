@@ -6,7 +6,7 @@ import (
 	"os"
 	"plugin"
 	
-	"github.com/narukoshin/EnRaiJin/pkg/config"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
 )
 
 var (
