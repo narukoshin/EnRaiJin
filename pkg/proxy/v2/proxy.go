@@ -1,18 +1,20 @@
 package v2
 
 import (
-	"time"
-	"errors"
-	"net/url"
-	"net/http"
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+	"time"
+
 	"golang.org/x/net/proxy"
 
 	"github.com/narukoshin/EnRaiJin/pkg/common"
-	"github.com/narukoshin/EnRaiJin/pkg/structs"
 	"github.com/narukoshin/EnRaiJin/pkg/config"
 	"github.com/narukoshin/EnRaiJin/pkg/headers"
+	"github.com/narukoshin/EnRaiJin/pkg/structs"
 )
 
 
@@ -71,7 +73,7 @@ func VerifyProxyConnection(method verifyMethod) error {
             return err
         }
 		port := common.FindPort(url)
-		addr := fmt.Sprintf("%s:%d", url.Host, port)
+		addr := net.JoinHostPort(url.Host, fmt.Sprintf("%d", port))
 		if _, err := dialer.Dial("tcp", addr); err != nil {
 			return err
 		}

@@ -53,11 +53,11 @@ func Verify_Host() error {
 		if err != nil {
 			return err
 		}
-		if _, err := dialer.Dial("tcp", fmt.Sprintf("%s:%d", url.Host, port)); err != nil {
+		if _, err := dialer.Dial("tcp", net.JoinHostPort(url.Host, fmt.Sprintf("%d", port))); err != nil {
 			return err
 		}
 	} else { // checking without the proxy
-		if _, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%d", url.Host, port), 3 * time.Second); err != nil {
+		if _, err = net.DialTimeout("tcp", net.JoinHostPort(url.Host, fmt.Sprintf("%d", port)), 3 * time.Second); err != nil {
 			return ErrDeadHost
 		}
 	}
