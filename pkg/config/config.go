@@ -2,9 +2,10 @@ package config
 
 import (
 	"errors"
-	"gopkg.in/yaml.v3"
 	"os"
-	
+
+	"gopkg.in/yaml.v3"
+
 	"github.com/narukoshin/EnRaiJin/v2/pkg/structs"
 )
 
@@ -28,9 +29,13 @@ var (
 	ErrIncludeNotFound = errors.New("one or more include files not found")
 )
 
+func ParseConfig(yml []byte, config interface{}) error {
+	return yaml.Unmarshal(yml, config)
+}
+
 func init() {
-	yml := load_file(YAMLFile)
-	err := yaml.Unmarshal(yml, &YAMLConfig)
+	yml := Load_Config(YAMLFile)
+	err := ParseConfig(yml, &YAMLConfig)
 	if err != nil {
 		CError = err
 		return
@@ -39,8 +44,8 @@ func init() {
 	// if `import` option is not empty, then importing the file from the option
 	// if the `import` option is empty, we will use config.yml that is loaded above.
 	if len(YAMLConfig.Import) != 0 {
-		yml = load_file(YAMLConfig.Import)
-		err := yaml.Unmarshal(yml, &YAMLConfig)
+		yml = Load_Config(YAMLConfig.Import)
+		err := ParseConfig(yml, &YAMLConfig)
 		if err != nil {
 			CError = err
 			return
@@ -52,13 +57,13 @@ func init() {
 		// We need to iterate through it
 		for _, inc := range YAMLConfig.Include {
 			// Trying to read the file and load it.
-			yml = load_file(inc)
+			yml = Load_Config(inc)
 			// If any of include files doesn't exist
 			// Returning an error message
 			if CError == ErrConfigNotFound {
 				CError = ErrIncludeNotFound
 			}
-			err = yaml.Unmarshal(yml, &YAMLConfig)
+			err = ParseConfig(yml, &YAMLConfig)
 			if err != nil {
 				CError = err
 				return
@@ -67,7 +72,7 @@ func init() {
 	}
 }
 
-func load_file(file_name string) []byte {
+func Load_Config(file_name string) []byte {
 	// Checking if the config file exists
 	if _, err := os.Stat(file_name); err != nil {
 		CError = ErrConfigNotFound
