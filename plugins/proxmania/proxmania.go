@@ -275,11 +275,34 @@ func Retrieve_ProxyList() ([]string, error) {
 			fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 			return proxies, nil
 		}
+		// a method that will check if the url is a valid url
 		isProtocolSchemed := func(url string) bool {
 			return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
 		}
 
+		// a method that will fetch a proxy data set from a public data set
+		fetchProxies := func (client *http.Client, url string) ([]string, error) {
+			fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", url)
+			var proxies []string
+			resp, err := client.Get(url)
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			scanner := bufio.NewScanner(resp.Body)
+			for scanner.Scan() {
+				proxies = append(proxies, scanner.Text())
+			}
+			if err := scanner.Err(); err != nil {
+				return nil, err
+			}
+			return proxies, nil
+		}
+
+		// Checking the type of the proxy data set
         switch cfgParams.ProxyDataSet.(type) {
+		// Checking if the proxy data set is an array
         case []any:
             for _, proxy := range cfgParams.ProxyDataSet.([]any) {
 				// Checking if data set is a local file
@@ -298,6 +321,7 @@ func Retrieve_ProxyList() ([]string, error) {
 					proxies = append(proxies, p...)
 				}
             }
+		// Checking if the proxy data set is a string
         case string:
 			// Checking if data set is a local file
 			if _, err := os.Stat(cfgParams.ProxyDataSet.(string)); err == nil {
@@ -314,8 +338,8 @@ func Retrieve_ProxyList() ([]string, error) {
 				proxies = append(proxies, proxyList...)
 			}
         }
+	// Using default proxy set
     } else {
-        // Using default proxy set
         proxyList, err := fetchProxies(client, DefaultProxySourceURL)
         if err != nil {
             return nil, err
