@@ -250,6 +250,7 @@ func Retrieve_ProxyList() ([]string, error) {
 		if err := scanner.Err(); err != nil {
 			return nil, err
 		}
+		fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 		return proxies, nil
 	}
 
@@ -271,7 +272,6 @@ func Retrieve_ProxyList() ([]string, error) {
 			if err := scanner.Err(); err != nil {
 				return nil, err
 			}
-			fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 			return proxies, nil
 		}
 		// a method that will check if the url is a valid url
@@ -291,8 +291,8 @@ func Retrieve_ProxyList() ([]string, error) {
 						return nil, err
 					}
 					proxies = append(proxies, p...)
+				// Checking if data set is a valid url
 				} else if isProtocolSchemed(proxy.(string)) {
-					// Downloading proxies from the public data set
 					p, err := fetchProxies(client, proxy.(string))
 					if err != nil {
 						return nil, err
@@ -309,7 +309,6 @@ func Retrieve_ProxyList() ([]string, error) {
 					return nil, err
 				}
 			} else if isProtocolSchemed(cfgParams.ProxyDataSet.(string)) {
-				// Downloading proxies from the public data set
 				proxyList, err := fetchProxies(client, cfgParams.ProxyDataSet.(string))
 				if err != nil {
 					return nil, err
