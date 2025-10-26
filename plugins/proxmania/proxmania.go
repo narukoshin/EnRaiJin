@@ -24,7 +24,7 @@ import (
 type Proxmania struct{}
 
 var (
-	Version string = "v1.1"
+	Version string = "v2.0.0"
 	Author  string = "Naru Koshin"
 	DefaultProxySourceURL string = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/socks5/data.txt"
 	ProxyMaxCount int = 30
