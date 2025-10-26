@@ -30,8 +30,7 @@ type YAMLCrawl struct {
 }
 
 type YAMLConfig struct {
-	Import  string         `yaml:"import"`
-	Include []string       `yaml:"include"`
+	Import  any			   `yaml:"import"`
 	F       []YAMLFields   `yaml:"fields"`
 	B       YAMLBruteforce `yaml:"bruteforce"`
 	OF      YAMLOn_fail    `yaml:"on_fail"`
