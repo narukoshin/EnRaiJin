@@ -233,6 +233,26 @@ func Retrieve_ProxyList() ([]string, error) {
         v2.Apply(client)
     }
 
+	// a method that will fetch a proxy data set from a public data set
+	fetchProxies := func (client *http.Client, url string) ([]string, error) {
+		fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", url)
+		var proxies []string
+		resp, err := client.Get(url)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		scanner := bufio.NewScanner(resp.Body)
+		for scanner.Scan() {
+			proxies = append(proxies, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+		return proxies, nil
+	}
+
     // Checking if proxyList is nil
     if cfgParams.ProxyDataSet != nil {
 		// a method that will load a local data set from the file specifiec in the params
@@ -257,26 +277,6 @@ func Retrieve_ProxyList() ([]string, error) {
 		// a method that will check if the url is a valid url
 		isProtocolSchemed := func(url string) bool {
 			return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
-		}
-
-		// a method that will fetch a proxy data set from a public data set
-		fetchProxies := func (client *http.Client, url string) ([]string, error) {
-			fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", url)
-			var proxies []string
-			resp, err := client.Get(url)
-			if err != nil {
-				return nil, err
-			}
-			defer resp.Body.Close()
-
-			scanner := bufio.NewScanner(resp.Body)
-			for scanner.Scan() {
-				proxies = append(proxies, scanner.Text())
-			}
-			if err := scanner.Err(); err != nil {
-				return nil, err
-			}
-			return proxies, nil
 		}
 
 		// Checking the type of the proxy data set
