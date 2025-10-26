@@ -13,6 +13,9 @@
 !config.sample.yml
 !plugins
 !plugins/**
+!build.sh
+!build
+!build/**
 
 # Afterallow deny-list
 plugins/**/*.so
