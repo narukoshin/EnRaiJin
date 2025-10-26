@@ -12,6 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/creasty/defaults"
+
+	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/middleware"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy/v2"
 )
@@ -20,9 +23,10 @@ import (
 type Proxmania struct{}
 
 var (
-	Version string = "v1.0-beta.2"
-	Author  string = "ENKO"
-	ProxySourceURL string = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/socks5/data.txt"
+	Version string = "v1.1"
+	Author  string = "Naru Koshin"
+	DefaultProxySourceURL string = "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/socks5/data.txt"
+	ProxyMaxCount int = 30
 
 	ProxyList []string
 	_ middleware.Plugin = Proxmania{}
@@ -52,6 +56,35 @@ var (
 	topProxies []ProxyResult
 )
 
+type ProxmaniaConfigStruct struct {
+	Proxmania ProxmaniaConfigParams `yaml:"proxmania"`
+}
+
+type ProxmaniaConfigParams struct {
+	ProxyDataSet any `yaml:"proxy_data_set"`
+	ProxyMaxCount int `yaml:"max_proxies" default:"30"`
+}
+
+var (
+	cfg ProxmaniaConfigStruct
+	cfgParams ProxmaniaConfigParams
+)
+
+// This function will load the config file and parse custom plugin parameters that are not parsed by the default parser.
+func ProxmaniaConfig() error {
+	// setting default values
+	if err := defaults.Set(&cfg); err != nil {
+		return err
+	}
+	err := config.MergeConfig(&cfg)
+	if err != nil {
+		return err
+	}
+	cfgParams = cfg.Proxmania
+	return nil
+}
+
+// Run sets a random proxy from the list of alive proxies and applies it to the client of the Middleware object.
 func (p Proxmania) Run(mw *middleware.Middleware) error {
 	// Setting random proxy
 	rp := RandomProxy()
@@ -60,8 +93,10 @@ func (p Proxmania) Run(mw *middleware.Middleware) error {
 	return nil
 }
 
+
+// WriteToFile writes a list of ProxyResult to a JSON file named "proxylist.json".
 func WriteToFile(proxies []ProxyResult) error {
-	file, err := os.OpenFile("proxylist.json", os.O_CREATE|os.O_WRONLY, 0744)
+	file, err := os.OpenFile("proxylist.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0744)
 	if err != nil {
 		return err
 	}
@@ -75,15 +110,19 @@ func WriteToFile(proxies []ProxyResult) error {
 	return nil
 }
 
+
+// Initializes the Proxmania plugin, loads the config file, prints some information about the plugin, retrieves the proxy list...
+// filters and checks the proxies, and writes the top proxies to a file.
 func init() {
+	var err error
+	err = ProxmaniaConfig()
+	if err != nil {
+		panic(err)
+	}
 	// Printing some information about the plugin.
 	fmt.Println("\033[1;31m[/!] Plugin 'Proxmania' initializing...\033[0m")
 	fmt.Printf("\033[1;31m[-] Version: %s\033[0m\n", Version)
 	fmt.Printf("\033[1;31m[-] Author: %s\n\tTwitter: @enkosan_p /x\\ Github: @narukoshin\033[0m\n", Author)
-
-	fmt.Printf("\033[1;32m[-] Proxy data set download in progress...\033[0m\n")
-
-	var err error
 	ProxyList, err = Retrieve_ProxyList()
 	if err != nil {
 		panic(err)
@@ -92,7 +131,12 @@ func init() {
 	WriteToFile(topProxies)
 }
 
+
+// RandomProxy returns a random proxy from the list of alive proxies.
 func RandomProxy() ProxyResult {
+	if len(topProxies) == 0 {
+		return ProxyResult{}
+	}
 	rand.Shuffle(len(topProxies), func(i, j int) {
 		topProxies[i], topProxies[j] = topProxies[j], topProxies[i]
 	})
@@ -101,6 +145,9 @@ func RandomProxy() ProxyResult {
 
 var mu sync.Mutex
 
+
+// CheckAndFilter is a function that filters and checks the proxies retrieved from the proxy list,
+// removes non-working proxies, and writes the top proxies to a file.
 func CheckAndFilter() {
     var wg sync.WaitGroup
     results := make(chan ProxyResult, len(ProxyList))
@@ -130,12 +177,16 @@ func CheckAndFilter() {
 		return AliveProxies[i].ResponseTime < AliveProxies[j].ResponseTime
 	})
 
-	// Saving only top 30 proxies with the best response time
-	for i := 0; i < len(AliveProxies) && i < 30; i++ {
+	// Saving only top proxies with the best response time
+	for i := 0; i < len(AliveProxies) && i < ProxyMaxCount; i++ {
 		topProxies = append(topProxies, AliveProxies[i])
 	}
 	// Cleaning garabage that we don't need anymore
 	AliveProxies = nil
+	// Checking if there is any proxy in the list of top proxies, if its empty, sending panic.
+	if len(topProxies) == 0 {
+		panic("No working proxies found")
+	}
 }
 
 // This function will try to connect to the website that shows the IP address using a proxy.
@@ -167,24 +218,108 @@ func Check_WorkingProxies(proxy string) (ProxyResult) {
 	return ProxyResult{ Proxy: proxy, Status: StatusBad, ResponseTime: duration, BodyResponse: "" }
 }
 
-// Retrieving a proxy list from the Github
+// Downloading proxy list from the public data sets
+func fetchProxies(client *http.Client, url string) ([]string, error) {
+    var proxies []string
+    resp, err := client.Get(url)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+
+    scanner := bufio.NewScanner(resp.Body)
+    for scanner.Scan() {
+        proxies = append(proxies, scanner.Text())
+    }
+    if err := scanner.Err(); err != nil {
+        return nil, err
+    }
+    return proxies, nil
+}
+
+
+// Retrieve_ProxyList retrieves a list of proxies from either a local file or a public data set.
+// If the proxy is present in the config.yml file, then the proxy list will be also retrieved using a proxy.
 func Retrieve_ProxyList() ([]string, error) {
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-	// If the proxy is present in the config.yml file,
-	// Then the proxy list will be also retrieved using a proxy.
-	// 				Anonym1ty Gangz
-	if v2.IsProxy() { v2.Apply(client) }
-	resp, err := client.Get(ProxySourceURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var proxies []string
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		proxies = append(proxies, scanner.Text())
-	}
-	return proxies, scanner.Err()
+    var proxies []string
+    client := &http.Client{
+        Timeout: 5 * time.Second,
+    }
+    // If the proxy is present in the config.yml file,
+    // Then the proxy list will be also retrieved using a proxy.
+    //              Anonym1ty Gangz
+    if v2.IsProxy() {
+        v2.Apply(client)
+    }
+
+    // Checking if proxyList is nil
+    if cfgParams.ProxyDataSet != nil {
+		// a method that will load a local data set from the file specifiec in the params
+		loadLocalDataSet := func(name string) ([]string, error) {
+			file, err := os.Open(name)
+			if err != nil {
+				return nil, err
+			}
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			var proxies []string
+			for scanner.Scan() {
+				proxies = append(proxies, scanner.Text())
+			}
+			if err := scanner.Err(); err != nil {
+				return nil, err
+			}
+			return proxies, nil
+		}
+
+        switch cfgParams.ProxyDataSet.(type) {
+        case []any:
+            for _, proxy := range cfgParams.ProxyDataSet.([]any) {
+				// Checking if data set is a local file
+				if _, err := os.Stat(proxy.(string)); err == nil {
+					fmt.Printf("\033[1;32m[-] Loading local proxy data set from %s...\033[0m\n", proxy.(string))
+					p, err := loadLocalDataSet(proxy.(string))
+					if err != nil {
+						return nil, err
+					}
+					proxies = append(proxies, p...)
+				} else {
+					// Downloading proxies from the public data set
+					fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", proxy.(string))
+					p, err := fetchProxies(client, proxy.(string))
+					if err != nil {
+						return nil, err
+					}
+					proxies = append(proxies, p...)
+					fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
+				}
+            }
+        case string:
+			// Checking if data set is a local file
+			if _, err := os.Stat(cfgParams.ProxyDataSet.(string)); err == nil {
+				fmt.Printf("\033[1;32m[-] Loading local proxy data set from %s ...\033[0m\n", cfgParams.ProxyDataSet.(string))
+				proxies, err = loadLocalDataSet(cfgParams.ProxyDataSet.(string))
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				// Downloading proxies from the public data set
+				fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", cfgParams.ProxyDataSet.(string))
+				proxyList, err := fetchProxies(client, cfgParams.ProxyDataSet.(string))
+				if err != nil {
+					return nil, err
+				}
+				proxies = append(proxies, proxyList...)
+				fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
+			}
+        }
+    } else {
+        // Using default proxy set
+        proxyList, err := fetchProxies(client, DefaultProxySourceURL)
+        if err != nil {
+            return nil, err
+        }
+        proxies = append(proxies, proxyList...)
+    }
+    return proxies, nil
 }
