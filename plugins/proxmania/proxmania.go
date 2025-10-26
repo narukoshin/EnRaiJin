@@ -221,6 +221,7 @@ func Check_WorkingProxies(proxy string) (ProxyResult) {
 
 // Downloading proxy list from the public data sets
 func fetchProxies(client *http.Client, url string) ([]string, error) {
+	fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", url)
     var proxies []string
     resp, err := client.Get(url)
     if err != nil {
@@ -257,6 +258,7 @@ func Retrieve_ProxyList() ([]string, error) {
     if cfgParams.ProxyDataSet != nil {
 		// a method that will load a local data set from the file specifiec in the params
 		loadLocalDataSet := func(name string) ([]string, error) {
+			fmt.Printf("\033[1;32m[-] Loading local proxy data set from %s...\033[0m\n", name)
 			file, err := os.Open(name)
 			if err != nil {
 				return nil, err
@@ -270,6 +272,7 @@ func Retrieve_ProxyList() ([]string, error) {
 			if err := scanner.Err(); err != nil {
 				return nil, err
 			}
+			fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 			return proxies, nil
 		}
 		isProtocolSchemed := func(url string) bool {
@@ -281,7 +284,6 @@ func Retrieve_ProxyList() ([]string, error) {
             for _, proxy := range cfgParams.ProxyDataSet.([]any) {
 				// Checking if data set is a local file
 				if _, err := os.Stat(proxy.(string)); err == nil {
-					fmt.Printf("\033[1;32m[-] Loading local proxy data set from %s...\033[0m\n", proxy.(string))
 					p, err := loadLocalDataSet(proxy.(string))
 					if err != nil {
 						return nil, err
@@ -289,32 +291,27 @@ func Retrieve_ProxyList() ([]string, error) {
 					proxies = append(proxies, p...)
 				} else if isProtocolSchemed(proxy.(string)) {
 					// Downloading proxies from the public data set
-					fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", proxy.(string))
 					p, err := fetchProxies(client, proxy.(string))
 					if err != nil {
 						return nil, err
 					}
 					proxies = append(proxies, p...)
-					fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 				}
             }
         case string:
 			// Checking if data set is a local file
 			if _, err := os.Stat(cfgParams.ProxyDataSet.(string)); err == nil {
-				fmt.Printf("\033[1;32m[-] Loading local proxy data set from %s ...\033[0m\n", cfgParams.ProxyDataSet.(string))
 				proxies, err = loadLocalDataSet(cfgParams.ProxyDataSet.(string))
 				if err != nil {
 					return nil, err
 				}
 			} else if isProtocolSchemed(cfgParams.ProxyDataSet.(string)) {
 				// Downloading proxies from the public data set
-				fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", cfgParams.ProxyDataSet.(string))
 				proxyList, err := fetchProxies(client, cfgParams.ProxyDataSet.(string))
 				if err != nil {
 					return nil, err
 				}
 				proxies = append(proxies, proxyList...)
-				fmt.Printf("\033[1;32m[-] Proxy data set download finished...\033[0m\n")
 			}
         }
     } else {
