@@ -219,27 +219,6 @@ func Check_WorkingProxies(proxy string) (ProxyResult) {
 	return ProxyResult{ Proxy: proxy, Status: StatusBad, ResponseTime: duration, BodyResponse: "" }
 }
 
-// Downloading proxy list from the public data sets
-func fetchProxies(client *http.Client, url string) ([]string, error) {
-	fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", url)
-    var proxies []string
-    resp, err := client.Get(url)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
-
-    scanner := bufio.NewScanner(resp.Body)
-    for scanner.Scan() {
-        proxies = append(proxies, scanner.Text())
-    }
-    if err := scanner.Err(); err != nil {
-        return nil, err
-    }
-    return proxies, nil
-}
-
-
 // Retrieve_ProxyList retrieves a list of proxies from either a local file or a public data set.
 // If the proxy is present in the config.yml file, then the proxy list will be also retrieved using a proxy.
 func Retrieve_ProxyList() ([]string, error) {
