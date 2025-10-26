@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -271,6 +272,9 @@ func Retrieve_ProxyList() ([]string, error) {
 			}
 			return proxies, nil
 		}
+		isProtocolSchemed := func(url string) bool {
+			return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
+		}
 
         switch cfgParams.ProxyDataSet.(type) {
         case []any:
@@ -283,7 +287,7 @@ func Retrieve_ProxyList() ([]string, error) {
 						return nil, err
 					}
 					proxies = append(proxies, p...)
-				} else {
+				} else if isProtocolSchemed(proxy.(string)) {
 					// Downloading proxies from the public data set
 					fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", proxy.(string))
 					p, err := fetchProxies(client, proxy.(string))
@@ -302,7 +306,7 @@ func Retrieve_ProxyList() ([]string, error) {
 				if err != nil {
 					return nil, err
 				}
-			} else {
+			} else if isProtocolSchemed(cfgParams.ProxyDataSet.(string)) {
 				// Downloading proxies from the public data set
 				fmt.Printf("\033[1;32m[-] Proxy data set download in progress from %s...\033[0m\n", cfgParams.ProxyDataSet.(string))
 				proxyList, err := fetchProxies(client, cfgParams.ProxyDataSet.(string))
