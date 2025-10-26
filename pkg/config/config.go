@@ -33,42 +33,46 @@ func ParseConfig(yml []byte, config interface{}) error {
 	return yaml.Unmarshal(yml, config)
 }
 
-func init() {
+// This function will read all imported config files and parse them
+func MergeConfig(config interface{}) error {
+	var err error
+	// Parsing default config file
 	yml := Load_Config(YAMLFile)
-	err := ParseConfig(yml, &YAMLConfig)
+	err = ParseConfig(yml, config)
 	if err != nil {
-		CError = err
-		return
+		return err
 	}
 
-	// if `import` option is not empty, then importing the file from the option
-	// if the `import` option is empty, we will use config.yml that is loaded above.
-	if len(YAMLConfig.Import) != 0 {
-		yml = Load_Config(YAMLConfig.Import)
-		err := ParseConfig(yml, &YAMLConfig)
-		if err != nil {
-			CError = err
-			return
+	// Parsing the imported config file
+	// Checking if Import interface is not nil
+	if YAMLConfig.Import != nil {
+		// checking is "import" string or interface
+		switch YAMLConfig.Import.(type) {
+		case string: {
+			yml := Load_Config(YAMLConfig.Import.(string))
+			err = ParseConfig(yml, config)
+			if err != nil {
+				return err
+			}
+		}
+		case []any: {
+			for _, name := range YAMLConfig.Import.([]any) {
+				yml := Load_Config(name.(string))
+				err = ParseConfig(yml, config)
+				if err != nil {
+					return err
+				}
+			}
+		}
 		}
 	}
-	// Including config by parts
-	if len(YAMLConfig.Include) != 0 {
-		// Because include option is an array
-		// We need to iterate through it
-		for _, inc := range YAMLConfig.Include {
-			// Trying to read the file and load it.
-			yml = Load_Config(inc)
-			// If any of include files doesn't exist
-			// Returning an error message
-			if CError == ErrConfigNotFound {
-				CError = ErrIncludeNotFound
-			}
-			err = ParseConfig(yml, &YAMLConfig)
-			if err != nil {
-				CError = err
-				return
-			}
-		}
+	return nil
+}
+
+func init() {
+	err := MergeConfig(&YAMLConfig)
+	if err != nil {
+		CError = err
 	}
 }
 
