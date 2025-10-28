@@ -230,6 +230,13 @@ func Start() error {
 		if len(Field) == 0 {
 			return ErrEmptyField
 		}
+
+		// Initializing plugins
+		err = middleware.InitializePlugins()
+		if err != nil {
+			return err
+		}
+
 		var wg sync.WaitGroup
 		// adding +1 job
 		wg.Add(len(wordlist))
