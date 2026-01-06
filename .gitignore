@@ -16,6 +16,7 @@
 !build.sh
 !build
 !build/**
+!LICENSE
 
 # Afterallow deny-list
 plugins/**/*.so
