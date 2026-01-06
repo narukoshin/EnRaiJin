@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"os"
 	
-	"github.com/narukoshin/EnRaiJin/v2/pkg/bruteforce"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/site"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/updater"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/site"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/bruteforce"
 )
 
-const Version string = "v2.6.0"
+const Version string = "v2.7.0"
 
+// Run is the main function of the EnRaiJin tool. It checks if there's any command used,
+// checks for updates, verifies the config, target host, and request method, and
+// starts the bruteforce attack.
 func Run() {
 	// checking if there's any command used
 	{
@@ -51,10 +54,12 @@ func Run() {
 		return
 	}
 	// verifying the target host uri
+	fmt.Print("[~] Verifying the target host... ")
 	if err := site.Verify_Host(); err != nil {
 		fmt.Printf("error: site: %v\n", err)
 		return
 	}
+	fmt.Print("done.\n")
 	// verifying the request method
 	if err := site.Verify_Method(); err != nil {
 		fmt.Printf("error: site: %v\n", err)

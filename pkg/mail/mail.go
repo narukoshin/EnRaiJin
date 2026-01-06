@@ -2,6 +2,7 @@ package mail
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -35,10 +36,16 @@ var (
 	ErrEmptyRecps   = errors.New("'recipients' field is empty")
 )
 
+// Enabled checks if the email feature is enabled in the config file.
+// It returns true if the email feature is enabled, false otherwise.
 func Enabled() bool {
 	return E != (s.YAMLEmail{})
 }
 
+// Initializes the email feature by setting the default timeout for the email server.
+// If the 'server.timeout' field is not set in the config file, it will be set to 10 seconds.
+// Additionally, if the proxy is enabled, it sets the gomail.NetDialTimeout function to tunnel through the proxy.
+// If any error occurs during the initialization, it is stored in the config.CError variable.
 func init(){
 	// if Server.Timeout is not set, setting a default value
 	if Server.Timeout == "" {
@@ -52,7 +59,7 @@ func init(){
 		// If proxy is present, 
 		// 		adding it to the gomail global variable to tunnel through the proxy.
 		if p.IsProxy() {
-			dialer, err := p.Dial()
+			dialer, err := p.Dial("")
 			if err != nil {
 				config.CError = err
 			}
@@ -63,6 +70,10 @@ func init(){
 	}
 }
 
+// _recipientParsing returns a string that represents the recipients of the email.
+// It checks if the recipients field is an array of strings or just a string.
+// If it is an array, it will combine all the elements into a single string with a comma as a separator.
+// If it is just a string, it will return the string as it is.
 func _recipientParsing() string {
 	switch Mail.Recipients.(type) {
 	case []interface{}: {
@@ -80,6 +91,7 @@ func _recipientParsing() string {
 	return ""
 }
 
+// Init_Headers is a function that will initialize the headers for the email message.
 func Init_Headers() *gomail.Message {
 	message := gomail.NewMessage()
 	// Extracting recipients
@@ -99,6 +111,8 @@ func Init_Headers() *gomail.Message {
 }
 
 
+// Set_Password will replace "<password>" in the email message with the given password and set it as the body of the email
+// If the Email feature is not enabled, Set_Password will do nothing
 func Set_Password(password string) {
 	// If Email feature is not enabled, doing nothing
 	if Enabled() {
@@ -107,6 +121,9 @@ func Set_Password(password string) {
 	}
 }
 
+// Send will send the email with the given password
+// If the Email feature is not enabled, Send will do nothing
+// It will return an error if there is any issue with sending the email
 func Send() error {
 	// If Email feature is not enabled, doing nothing
 	if Enabled() {
@@ -124,9 +141,12 @@ func Send() error {
 	return nil
 }
 
-
-// To ensure that the tool is able to send an email
-// We need to test the connection first.
+// Ping tests if the email server is reachable.
+// It opens a connection to the server with the given configuration
+// and then closes it.
+//
+// If the connection can be established, Ping returns nil.
+// If the connection cannot be established, Ping returns an error.
 func Ping() error {
 	dialer := gomail.NewDialer(Server.Host, Server.Port, Server.Email, Server.Password)
 	timeout, err := time.ParseDuration(Server.Timeout)
@@ -145,8 +165,8 @@ func Ping() error {
 func Test() error {
 	var err error
 	if Enabled() {
-		// Validating
-		// Checking if Server is not empty
+		fmt.Print("\033[32m[~] Testing email configuration... \033[0m")
+		// All the lines below are testing if the email configuration is correct or not.
 		if Server == (s.YAMLEmailServer{}) {
 			return ErrEmptyServer
 		}
@@ -162,7 +182,6 @@ func Test() error {
 		if Server.Password == "" {
 			return ErrEmptyPassword
 		}
-		// Checking if Mail is not empty
 		if Mail == (s.YAMLEmailMail{}) {
 			return ErrEmptyMail
 		}
@@ -178,11 +197,12 @@ func Test() error {
 		if Mail.Recipients == nil {
 			return ErrEmptyRecps
 		}
-		// Ping test
+		// Ping is connecting to the server to see that it can establish a connection with the mail server.
 		err = Ping()
 		if err != nil {
 			return err
 		}
+		fmt.Print(" \033[32mdone.\033[0m\r\n")
 	}
 	return nil
 }
