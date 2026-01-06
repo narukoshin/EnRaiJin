@@ -5,64 +5,78 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+
 	"github.com/Masterminds/semver"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy/v2"
 	"github.com/walle/targz"
 )
 
 const (
-	allReleases 		string = "https://api.github.com/repos/narukoshin/enraijin/releases"
-	platform		 	string = runtime.GOOS
-	arch				string = runtime.GOARCH
+	allReleases string = "https://api.github.com/repos/narukoshin/enraijin/releases"
+	platform    string = runtime.GOOS
+	arch        string = runtime.GOARCH
 )
 
 type Mode string
 
 const (
-	Loud Mode = "Loud"
+	Loud     Mode = "Loud"
 	OnUpdate Mode = "OnUpdate"
 )
-
 
 var binaryFileName string
 
 var Latest Release
 
 type Release struct {
-	Version	   string `json:"name"`
-	Prerelease bool   `json:"prerelease"`
-	Assets []Release_Asset `json:"assets"`
+	Version    string          `json:"name"`
+	Prerelease bool            `json:"prerelease"`
+	Assets     []Release_Asset `json:"assets"`
 }
 
 type Release_Asset struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	Download string `json:"browser_download_url"`
 }
 
 type HasUpdatesToInstall struct {
-	LatestVersion string
+	LatestVersion  string
 	ExecutableName string
-	Assets []Release_Asset
+	Assets         []Release_Asset
 }
 
+// init sets the binaryFileName based on the platform that the code is running on.
 func init() {
 	switch platform {
-    case "windows":
-        binaryFileName = "enraijin.exe"
-    case "linux":
-        binaryFileName = "enraijin"
-    case "darwin":
-        binaryFileName = "enraijin"
-    default:
-        return
-    }
+	case "windows":
+		binaryFileName = "enraijin.exe"
+	case "linux":
+		binaryFileName = "enraijin"
+	case "darwin":
+		binaryFileName = "enraijin"
+	default:
+		return
+	}
 }
 
+// Get_Release returns the latest release of Enraijin that is not a prerelease.
+// If there are no releases that are not prereleases, it returns an error.
+// The function sends a GET request to GitHub's API to get the list of all releases.
+// If the request is successful, it parses the JSON response and returns the latest non-prerelease.
 func Get_Release() (Release, error) {
-	resp, err := http.Get(allReleases)
+	client := &http.Client{}
+	// Applying proxy settings if they are available
+	if v2.IsProxy(){
+		err := v2.Apply(client)
+		if err != nil {
+			return Release{}, err
+		}
+	}
+	resp, err := client.Get(allReleases)
 	if err != nil {
 		return Release{}, err
 	}
@@ -89,6 +103,14 @@ func Get_Release() (Release, error) {
 	return Release{}, nil
 }
 
+// CheckForUpdate checks if there is a newer version of Enraijin available.
+// It takes two parameters: currentVersion which is the current version of Enraijin that is installed,
+// and mode which is the mode of the update checker (Loud or OnUpdate).
+// If there is a newer version available, it returns a HasUpdatesToInstall struct with the latest version,
+// the name of the executable file, and the assets of the latest release.
+// If there is no newer version available, it returns an empty HasUpdatesToInstall struct and no error.
+// If the update checker is running in Loud mode, it prints a message when it starts checking for updates,
+// and when it finishes checking.
 func CheckForUpdate(currentVersion string, mode Mode) (HasUpdatesToInstall, error) {
 	if mode == Loud {
 		fmt.Printf("\033[36m[-] Checking version...\n\033[0m")
@@ -107,15 +129,15 @@ func CheckForUpdate(currentVersion string, mode Mode) (HasUpdatesToInstall, erro
 	if err != nil {
 		return HasUpdatesToInstall{}, err
 	}
-	if currentVer.LessThan(latestVer){
+	if currentVer.LessThan(latestVer) {
 		executablePath, err := os.Executable()
 		if err != nil {
 			return HasUpdatesToInstall{}, err
 		}
-		return HasUpdatesToInstall {
-			LatestVersion: latest_v,
+		return HasUpdatesToInstall{
+			LatestVersion:  latest_v,
 			ExecutableName: filepath.Base(executablePath),
-			Assets: release.Assets,
+			Assets:         release.Assets,
 		}, nil
 	}
 	if mode == Loud {
@@ -124,8 +146,9 @@ func CheckForUpdate(currentVersion string, mode Mode) (HasUpdatesToInstall, erro
 	return HasUpdatesToInstall{}, nil
 }
 
-
-func SelectAsset(assets []Release_Asset) (Release_Asset, error)  {
+// SelectAsset selects an asset from the list of available assets that matches the current system's platform and architecture.
+// If no matching asset is found, an error is returned with a message indicating that the binary is not available for install and suggesting to compile it manually.
+func SelectAsset(assets []Release_Asset) (Release_Asset, error) {
 	// Changing naming for macos platforms
 	var p string = platform
 	if p == "darwin" {
@@ -134,12 +157,19 @@ func SelectAsset(assets []Release_Asset) (Release_Asset, error)  {
 	goosarch := fmt.Sprintf("%s-%s", p, arch)
 	for _, asset := range assets {
 		if strings.Contains(asset.Name, goosarch) {
-            return asset, nil
-        }
-    }
+			return asset, nil
+		}
+	}
 	return Release_Asset{}, fmt.Errorf("sorry, but binary for your system (%s) is not available for install. Please compile it manually.", goosarch)
 }
 
+// InstallUpdate checks for the latest version of the binary and updates it if necessary.
+// It uses the CheckForUpdate function to check if there is a newer version available and
+// if so, it downloads the archive, extracts it, and updates the current binary.
+// If the update is successful, it removes the old binary and prints a success message.
+// If the binary is locked and cannot be updated, it prints a message asking the user to
+// manually delete the old binary file.
+// If the update fails, it removes the temp directory and prints an error message.
 func InstallUpdate(currentVersion string, mode Mode) error {
 	if updates, err := CheckForUpdate(currentVersion, mode); err == nil {
 		if updates.LatestVersion != "" {
@@ -154,7 +184,7 @@ func InstallUpdate(currentVersion string, mode Mode) error {
 			if err != nil {
 				return err
 			}
-			defer func(){
+			defer func() {
 				fmt.Printf("\033[36m[-] Cleaning up...\n\033[0m")
 				os.RemoveAll(tempDir)
 				if updateSuccess {
@@ -168,7 +198,15 @@ func InstallUpdate(currentVersion string, mode Mode) error {
 				return err
 			}
 
-			resp, err := http.Get(asset.Download)
+			client := &http.Client{}
+			// Applying proxy settings if they are available
+			if v2.IsProxy(){
+				err = v2.Apply(client)
+				if err != nil {
+					return err
+				}
+			}
+			resp, err := client.Get(asset.Download)
 			if err != nil {
 				return err
 			}
@@ -187,22 +225,19 @@ func InstallUpdate(currentVersion string, mode Mode) error {
 			if err != nil {
 				return err
 			}
-		
+
 			binaryPath := filepath.Join(tempDir, binaryFileName)
-            if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
-                return fmt.Errorf("binary file %s not found, install failed", binaryFileName)
-            }
-			
+			if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
+				return fmt.Errorf("binary file %s not found, install failed", binaryFileName)
+			}
+
 			currDir, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 
-            fmt.Printf("\033[36m[-] Updating binary...\n\033[0m")
+			fmt.Printf("\033[36m[-] Updating binary...\n\033[0m")
 			currentBinary := filepath.Join(currDir, updates.ExecutableName)
-			if err != nil {
-				return err
-			}
 
 			if _, err := os.Stat(currentBinary); os.IsNotExist(err) {
 				return fmt.Errorf("Meow! It looks like you're trying to run the update with `go run`. Please use the compiled binary instead.")
@@ -248,6 +283,6 @@ func InstallUpdate(currentVersion string, mode Mode) error {
 			updateSuccess = true
 			fmt.Printf("\033[36m[-] The binary successfuly updated...\n\033[0m")
 		}
-	} 
+	}
 	return nil
 }
