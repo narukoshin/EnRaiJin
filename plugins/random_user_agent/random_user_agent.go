@@ -2,18 +2,20 @@ package main
 
 import (
 	"math/rand"
-	"time"
-	
+	"net/http"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/middleware"
 )
 
 type UserAgentPlugin struct{}
 
 var (
+	Version string = "v2.0.0"
+	Author  string = "Naru Koshin"
+
 	_ middleware.Plugin = UserAgentPlugin{}
 	Plugin = UserAgentPlugin{}
 
-	UserAgents = []string{
+	DefaultUserAgents = []string{
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15",
 		"Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36",
@@ -27,18 +29,18 @@ var (
     }
 )
 
-func init(){
-	rand.Seed(time.Now().UnixNano())
-}
-
+// RandomUserAgent returns a random User-Agent string from the list of pre-defined User-Agents.
 func RandomUserAgent() string {
-	rand.Shuffle(len(UserAgents), func(i, j int) {
-		UserAgents[i], UserAgents[j] = UserAgents[j], UserAgents[i]
-	})
-	return UserAgents[0]
+	return DefaultUserAgents[rand.Intn(len(DefaultUserAgents))]
 }
 
-func (p UserAgentPlugin) Run(m *middleware.Middleware) error {
-	m.Request.Header.Set("User-Agent", RandomUserAgent())
-	return nil
+// Middleware returns a middleware that sets a random User-Agent header for every HTTP request.
+// It wraps the given next RoundTripper and sets the User-Agent header before calling it.
+func (p UserAgentPlugin) Middleware() middleware.ClientMiddleware {
+	return func(next http.RoundTripper) http.RoundTripper {
+		return middleware.RoundTripFunc(func(req *http.Request) (*http.Response, error) {
+			req.Header.Set("User-Agent", RandomUserAgent())
+			return next.RoundTrip(req)
+		})
+	}
 }

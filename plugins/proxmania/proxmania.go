@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -64,6 +65,7 @@ type ProxmaniaConfigStruct struct {
 type ProxmaniaConfigParams struct {
 	ProxyDataSet any `yaml:"proxy_data_set"`
 	ProxyMaxCount int `yaml:"max_proxies" default:"30"`
+	Timeout time.Duration `yaml:"timeout" default:"60s"`
 }
 
 var (
@@ -71,7 +73,10 @@ var (
 	cfgParams ProxmaniaConfigParams
 )
 
-// This function will load the config file and parse custom plugin parameters that are not parsed by the default parser.
+// ProximediaConfig sets default values for the Proximedia configuration and
+// then merges the configuration from the file specified by the config file path
+// into the ProximediaConfigStruct. It returns an error if the configuration
+// file could not be read or if the configuration is invalid.
 func ProxmaniaConfig() error {
 	// setting default values
 	if err := defaults.Set(&cfg); err != nil {
@@ -85,17 +90,42 @@ func ProxmaniaConfig() error {
 	return nil
 }
 
-// Run sets a random proxy from the list of alive proxies and applies it to the client of the Middleware object.
-func (p Proxmania) Run(mw *middleware.Middleware) error {
-	// Setting random proxy
-	rp := RandomProxy()
-	v2.Proxy.Addr = rp.Proxy
-	v2.Apply(mw.Client)
-	return nil
+
+// Middleware returns a middleware that sets a random proxy from the available proxy list for every HTTP request.
+// It wraps the given next RoundTripper and sets the proxy URL before calling it.
+// If there are no available proxies, it returns an error.
+// The function uses the proxy URL stored in the context of the request if available, otherwise it uses a random proxy from the list.
+// If the global proxy URL is empty, it does not set the proxy URL.
+// It also sets the Timeout field of the client to the global timeout and the InsecureSkipVerify field of the client's TLSClientConfig to the global ignore TLS flag.
+// If the client's Transport is nil, it sets it to a new *http.Transport. If the client's Transport is not a *http.Transport, it returns an error.
+// If the global proxy URL is invalid, it returns an error.
+func (p Proxmania) Middleware() middleware.ClientMiddleware {
+	return func(next http.RoundTripper) http.RoundTripper {
+		return middleware.RoundTripFunc(func(req *http.Request) (*http.Response, error) {
+			rp := RandomProxy()
+			if rp.Proxy == "" {
+				return nil, fmt.Errorf("no proxy available")
+			}
+			ctx, cancel := context.WithTimeout(req.Context(), cfgParams.Timeout)
+			defer cancel()
+			req = req.WithContext(ctx)
+			ctx = context.WithValue(req.Context(), v2.ProxyContextKey, rp.Proxy)
+			req = req.WithContext(ctx)
+			resp, err := next.RoundTrip(req)
+			if err != nil {
+				fmt.Println("fucked up something")
+				return nil, err
+			}
+			return resp, err
+		})
+	}
 }
 
-
-// WriteToFile writes a list of ProxyResult to a JSON file named "proxylist.json".
+// WriteToFile writes the given list of proxies to a file named "proxylist.json".
+// If the file does not exist, it will be created. If the file already exists, it will be truncated.
+// The list of proxies is marshalled into JSON before being written to the file.
+// If there is an error while writing to the file, that error will be returned.
+// The file is closed after writing is finished, regardless of whether an error occurred or not.
 func WriteToFile(proxies []ProxyResult) error {
 	file, err := os.OpenFile("proxylist.json", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0744)
 	if err != nil {
@@ -112,8 +142,9 @@ func WriteToFile(proxies []ProxyResult) error {
 }
 
 
-// Initializes the Proxmania plugin, loads the config file, prints some information about the plugin, retrieves the proxy list...
-// filters and checks the proxies, and writes the top proxies to a file.
+
+// Initializes the Proximedia plugin by reading the configuration file, retrieving the proxy list, filtering the proxy list, and writing the top proxies to a file named "proxylist.json". 
+// If any error occurs during the initialization, it panics with the error message.
 func init() {
 	var err error
 	err = ProxmaniaConfig()
@@ -133,7 +164,10 @@ func init() {
 }
 
 
-// RandomProxy returns a random proxy from the list of alive proxies.
+// Returns a random proxy from the list of top proxies.
+// If the list of top proxies is empty, it returns an empty ProxyResult.
+// The function uses the math/rand package to shuffle the list of top proxies and then returns the first item in the list.
+// The function is used to get a random proxy from the list of top proxies without having to manually shuffle the list every time.
 func RandomProxy() ProxyResult {
 	if len(topProxies) == 0 {
 		return ProxyResult{}
@@ -147,8 +181,12 @@ func RandomProxy() ProxyResult {
 var mu sync.Mutex
 
 
-// CheckAndFilter is a function that filters and checks the proxies retrieved from the proxy list,
-// removes non-working proxies, and writes the top proxies to a file.
+
+// CheckAndFilter is a function that takes a list of proxies and checks if they are working by
+// sending a GET request to the proxy and checking the response status code and response time.
+// If the proxy is working, it adds the proxy to the list of alive proxies and sorts the list by response time in ascending order.
+// Finally, it saves only the top proxies with the best response time to the list of top proxies and cleans up the garbage that is not needed anymore.
+// If there are no working proxies found, it sends a panic with an error message.
 func CheckAndFilter() {
     var wg sync.WaitGroup
     results := make(chan ProxyResult, len(ProxyList))
@@ -186,12 +224,16 @@ func CheckAndFilter() {
 	AliveProxies = nil
 	// Checking if there is any proxy in the list of top proxies, if its empty, sending panic.
 	if len(topProxies) == 0 {
-		panic("No working proxies found")
+		fmt.Printf("error: no working proxies found\n")
+		os.Exit(1)
 	}
 }
 
-// This function will try to connect to the website that shows the IP address using a proxy.
-// If the connection is sucessfully, it will return a struct with proxy, status, responseTime and bodyResponse
+
+// Check_WorkingProxies checks if the given proxy is working by sending a GET request to the proxy and checking the response status code and response time.
+// If the proxy is working, it returns a ProxyResult with the proxy's address, status set to StatusGood, response time in seconds, and the body response.
+// If the proxy is not working, it returns a ProxyResult with the proxy's address, status set to StatusDead, response time set to 0, and the error message.
+// If the proxy is working but the response status code is not 200 or the response time is greater than 5 seconds, it returns a ProxyResult with the proxy's address, status set to StatusBad, response time in seconds, and the body response.
 func Check_WorkingProxies(proxy string) (ProxyResult) {
 	client := &http.Client{}
 	v2.Proxy.Addr = proxy
@@ -219,12 +261,31 @@ func Check_WorkingProxies(proxy string) (ProxyResult) {
 	return ProxyResult{ Proxy: proxy, Status: StatusBad, ResponseTime: duration, BodyResponse: "" }
 }
 
-// Retrieve_ProxyList retrieves a list of proxies from either a local file or a public data set.
-// If the proxy is present in the config.yml file, then the proxy list will be also retrieved using a proxy.
+
+// Retrieve_ProxyList retrieves a list of proxies from a given data set.
+//
+// The data set can be a local file, a valid URL, or an array of local files or valid URLs.
+// The function will check the type of the data set and based on that, it will use either the
+// loadLocalDataSet or the fetchProxies method to retrieve the proxy list.
+//
+// If the data set is a local file, the loadLocalDataSet method will be used to load the proxies
+// from the file. If the data set is a valid URL, the fetchProxies method will be used to download
+// the proxy list from the URL.
+//
+// If the data set is an array, the function will loop through the array and check the type of
+// each item. If the item is a local file, the loadLocalDataSet method will be used to load the
+// proxies from the file. If the item is a valid URL, the fetchProxies method will be used to download
+// the proxy list from the URL.
+//
+// The function returns the list of proxies and an error if any occurs during the retrieval of
+// the proxy list. If the data set is empty, the function will return an empty list and a nil error.
+//
+// The function also checks if a proxy is present in the config.yml file. If a proxy is present,
+// the proxy list will also be retrieved using a proxy.
 func Retrieve_ProxyList() ([]string, error) {
     var proxies []string
     client := &http.Client{
-        Timeout: 5 * time.Second,
+        Timeout: 15 * time.Second,
     }
     // If the proxy is present in the config.yml file,
     // Then the proxy list will be also retrieved using a proxy.

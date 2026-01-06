@@ -27,7 +27,9 @@ var (
 	Methods_Allowed []string = []string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"}
 )
 
-// Verifying if the request method is correct
+// Verify_Method checks if the request method specified in the config is valid.
+// It checks if the method is one of the following: GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH.
+// If the method is not valid, it returns an error message.
 func Verify_Method() error {
 	for _, value := range Methods_Allowed {
 		if ok := strings.EqualFold(Method, value); ok {
@@ -37,7 +39,10 @@ func Verify_Method() error {
 	return ErrInvalidMethod
 }
 
-// Verifying if the host of target is specified correctly and the host is alive
+// Verify_Host checks if the host specified in the config is valid and alive.
+// It first checks if the host is set correctly with the scheme, then gets the host port from the scheme.
+// Finally, it checks if the host is alive by attempting to establish a TCP connection to the host.
+// If the host is not valid or alive, it returns an error message.
 func Verify_Host() error {
 	// checking if the host is set correctly with the scheme
 	url, err := url.ParseRequestURI(Host)
@@ -49,7 +54,7 @@ func Verify_Host() error {
 	// checking if the host is alive
 
 	if proxy.IsProxy(){ // checking with the proxy
-		dialer, err := proxy.Dial()
+		dialer, err := proxy.Dial("")
 		if err != nil {
 			return err
 		}

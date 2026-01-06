@@ -341,22 +341,15 @@ func _run_attack(pass string) error {
 				req.Header.Set(header.Name, header.Value)
 			}
 		}
-
-		middleware := middleware.Middleware {
+		mw := middleware.Middleware {
 			Client: client,
 			Request: req,
 		}
-		err = middleware.Do()
-		if err != nil {
-			Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: err.Error()}
-			return nil
-		}
-
+		// sending the request through the middleware
+		resp, err := mw.Do()
 		if Debug {
 			fmt.Printf("Request_RAW: %v\n", req)
 		}
-
-		resp, err := client.Do(req)
 		if err != nil {
 			// if there was any error, repeating the same request again until it's successful.
 			AttackFail.Password = pass
