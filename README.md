@@ -1,7 +1,7 @@
 # 🧪 Enraijin
 
-*A little bit different brute-force tool.*
-  
+*A small, flexible web brute-force framework — designed for long runs, clarity, and easy configuration.*
+
 <img src="https://c.tenor.com/gOP4dRPvzWcAAAAi/angry-mafumafu.gif" align="right" width="160">
 <div>
   <img src="https://img.shields.io/github/go-mod/go-version/narukoshin/custom-bruteforce">
@@ -14,168 +14,345 @@
     <a target="_blank" href="https://instagram.com/enko.san"><img src="https://media1.giphy.com/media/Wu9Graz2W46frtHFKc/giphy.gif?cid=ecf05e47h46mbuhq40rgevni5rbxgadpw5icrr71vr9nu8d4&rid=giphy.gif&ct=s" align="middle" width="120"></a>
   </div>
 </div>
-<h1>⚗ About this tool</h1>
-<p>I'm Naru Koshin the creator of this wonderful tool. If you are still wondering what this tool is for, why I spent so much time on creating it, and what you can do with it, then I will try to explain you as simply as possible.</p>
-<p>I'm studying and working as a penetration tester, and IT Security analyst, call it as you want, I'm hacking servers, but most websites, okay?</p>
-<p>Most of the tools are pretty hard to use especially if you are hacking for many days. I don't like to write automated code for every project that will run a Hydra or any other tool that will brute-force passwords for me. And no, I'm not a script kiddie. I just don't like to type very long commands and then figure out why the heck the script is not working as I want. My tool is very simple to use and the config is easy to read. You can share a config file, you can store it for how long you need, etc.</p>
-<p>As I mentioned before, This tool is for brute-forcing aka cracking the website passwords. There's nothing difficult to understand. Just type the data about the website, and set your options, for example, you can send a password when it will be found to the email so you can leave this tool to work on your server or somewhere else.</p>
-<p>Why I'm spending this tool so much of my time? The reason is simple. I just want to crack passwords gently. Write the config, check the config, everything looks fine, start it, and wait for the password. I know how my tool works better than anyone else. If there is any bug, I'm fixing it.. or at least trying to fix it. In the previous release, I added a new awesome feature - Getting passwords in an email. This will be very useful when I'm working with the team.</p>
-<p>Yes, my tool works only on websites, but it's still better than Hydra. 😂 For other protocols I'm using Ncrack.</p>
-<h1>📚 Getting started</h1>
-<p>To download this tool, type the command below:</p>
+
+Enraijin is a focused tool for automating credential brute-force against web forms. It prioritizes readable configuration, reliable proxy support, token crawling, and convenient notifications so you can set it up once and run long tests without constant babysitting.
+
+> Important: Use this tool only against systems you own or have explicit permission to test. Unauthorized access is illegal. Always follow your organization’s rules and applicable laws.
+
+---
+
+📚 Table of contents
+- About
+- Quick start
+- Configuration (simple → advanced)
+- Plugins (Agentix, Proxmania)
+- Common workflows & examples
+- Proxy & crawl details
+- Email notifications
+- Troubleshooting & tips
+- TODO & changelog
+- Contributing & license
+
+---
+
+# ⚗ About this tool
+
+Hi — I'm Naru Koshin, author of Enraijin. I built this to make web brute-force runs easier to manage and repeatable across engagements. Many pentest tasks require the same patterns (form fields, tokens, proxies, output), and copying ad-hoc scripts for each target gets tedious and error-prone. Enraijin gives you a single, human-editable YAML config to cover most use cases with sensible defaults.
+
+If you need protocol-level cracking (FTP, SSH, RDP, etc.), consider Ncrack or other specialized tools — Enraijin focuses on HTTP(S) web forms.
+
+---
+
+# 📚 Quick start
+
+Clone the repo:
 
 ```sh
-  git clone https://github.com/narukoshin/custom-bruteforce
-```
-... or download binaries from the releases page.
-
-<h1>📅 TODO</h1>
-
-- [x] Proxy Feature <br>
-      + added in commit: <a href="https://github.com/narukoshin/custom-bruteforce/commit/ba5ab6fefc17f29476e31eae98774edc23e94815">`ba5ab6f`</a><br>
-      + changelog: <a href="https://github.com/narukoshin/custom-bruteforce/releases/tag/v2.3-beta">`v2.3-beta`</a>
-- [x] Idea about `import` option where you can import config file with the custom name like `import: my_website.yml` <br>
-      + added in commit: <a href="https://github.com/narukoshin/custom-bruteforce/commit/823b14f907ce92a44d69174510f681ba0da31c6e">`823b14f`</a><br>
-      + changelog: <a href="https://github.com/narukoshin/custom-bruteforce/releases/tag/v2.3-beta">`v2.3-beta`</a>
-- [x] Email notifications <br>
-      + added in commit: <a href="https://github.com/narukoshin/custom-bruteforce/commit/a98c4631dd29cfcf6d50ef45bb5b1a98b67e3aa3">`a98c463`</a><br>
-      + changelog: <a href="https://github.com/narukoshin/custom-bruteforce/releases/tag/v2.4.3">`v2.4.3`</a>
-
-💭 If you have any suggestion about new features, please open a new issue with the enhancement label.
-
-<h1>⚙ Creating configuration</h1>
-<p>Before you start using the tool, you need to create a config file called <code>config.yml</code></p>
-
-```sh
-touch config.yml
-... or
-vim config.yml
-... or you can use pre-made config
-mv config.sample.yml config.yml
+git clone https://github.com/narukoshin/custom-bruteforce
+cd custom-bruteforce
 ```
 
-<p>Next, you need to fill the config file with the information about your target to brute-force.</p>
+Build or download a release from the Releases page, then run the binary:
+
+- Run a local binary (Linux example):
+  ```sh
+  ./enraijin
+  ```
+
+- Install via `go install` (recommended if you use Go toolchain):
+  ```sh
+  go install github.com/narukoshin/EnRaiJin/v2@latest
+  ```
+  After `go install`, the binary will be placed in `$GOBIN` (or `$GOPATH/bin` if `$GOBIN` is not set). Run it as `EnRaiJin` or by full path.
+
+If the repository includes platform-specific binaries, pick the one for your OS.
+
+---
+
+# ⚙ Creating configuration
+
+Enraijin uses a single YAML config file (default name: `config.yml`). The file is intentionally straightforward — fill in your target, choose a wordlist source, and set a few optional behaviors.
+
+Minimum config example (simple):
 
 ```yaml
-#config.yml
+# config.yml
+site:
+  host: "https://example.com/login"
+  method: POST
 
-# You can import another config file with a custom name, for example, my-project.yml
-import: my-project.yml
-# after import, the following lines will be ignored.
+bruteforce:
+  field: password        # the form input name to brute-force
+  from: file             # 'file' | 'list' | 'stdin'
+  file: /usr/share/wordlists/rockyou.txt
+  threads: 5
+```
 
-# You can also include config by separate files
-include:
-      - file1.yml
-      - website.com/file2.yml
+Advanced, annotated example (recommended for real runs):
+
+```yaml
+# config.yml
+
+# import another config file (if present, this file is ignored)
+# import: my-project.yml
+
+# include additional partial configs (merged)
+# import:
+#   - common-headers.yml
+#   - site-specific.yml
 
 site:
-    host: https://website.com/login # the login page that you want to crack.
-    method: POST # request method for making a request
+  host: "https://website.com/login"   # login URL (or a page that accepts the auth request)
+  method: POST                        # HTTP method used for auth POST/GET
+
+# bruteforce options
 bruteforce:
-    field: password # the field that you want to brute-force (important)
-    
-    # There are 3 ways from where you can load a wordlist
-    # method 1 - from the file
-    from: file
-    file: /usr/share/wordlists/rockyou.txt # the path, where is your wordlist located at
-    # method 2 - from the list
-    from: list
-    list:
-        - password1
-        - password2
-        - password3
-    # method 3 - from the stdin
-    # info: be careful with this method because of the RAM leak.
-    # more info about the bug: https://github.com/narukoshin/custom-bruteforce/issues/2
-    from: stdin
-```
-<p>When you are using <b>stdin</b> method, type the command as shown below:</p>
+  field: password                     # name of the input to brute-force
+  from: file                          # file | list | stdin
+  file: /usr/share/wordlists/rockyou.txt
+  # OR
+  # from: list
+  # list:
+  #   - P@ssw0rd
+  #   - password123
+  # OR (stdin)
+  # from: stdin
 
-```sh
-    # example 1
-    cat /usr/share/wordlists/rockyou.txt | ./linux
-    # example 2
-    crunch 8 8 0123456789 | ./linux
-    # ...etc
-```
+  threads: 30                         # number of concurrent attempts (default: 5)
+  no_verbose: false                   # true to silence "trying password..." lines
+  output: /home/naru/results/passwords.txt  # save successful credentials
 
-```yaml
-#config.yml
-
-    # Next, you need to specify how many threads you want to use. The default value is 5
-    threads: 30
-    
-    # If you don't want to see messages like "trying password...", you can turn it off with the option below:
-    # It's optional, so if you don't need to turn it off, you can skip this option
-    no_verbose: true
-    
-    # By default, when the tool finds out the password, the password will be printed on the screen, 
-    # ...but if you want you can set it to save in the file
-    output: /home/naru/my_target/password.txt
-    
-# Setting the headers
-# There's nothing difficult
-headers:
-    - name: Content-Type
-      value: application/x-www-form-urlencoded; charset=utf-8
-    - name: User-Agent
-      value: Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4747.211 Safari/537.36
-      
-# Setting the static fields
+# static fields included with each attempt (e.g., username)
 fields:
-    # Setting the username that we want to brute-force
-    - name: username  # the input name
-      value: admin
-      
-# Adding error message if the password is incorrect
-# p.s. This will be ignored if you add on_pass option
+  - name: username
+    value: admin
+
+# add or override headers sent with requests
+headers:
+  - name: Content-Type
+    value: application/x-www-form-urlencoded; charset=utf-8
+  - name: User-Agent
+    value: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+
+# detect failed attempts by message or by status code
 on_fail:
-    message: incorrect password
-    status_code: 401 # default value is 0
-    
-# Adding the successful message, if, for example, we are in the admin panel
+  message: "incorrect password"
+  status_code: 401
+
+# detect successful login by message or by status code
 on_pass:
-    message: Welcome, 
-    status_code: 200 # default value is 200
-    
-# And the last cherry of this tool is the crawl option
-# This option can help you find the token if there is any and will add it to your request
+  message: "Welcome,"
+  status_code: 200
+
+# crawl + token extraction (useful for CSRF tokens)
 crawl:
-    url: <token-url> # If the token is not located in the original request, then we will set a new one to get the token
-    name: token # the name of the field where the token will be passed to the request
-    search: "token = '([a-z0-9]{32})" # to find the token, use regex
+  url: "https://website.com/login"                 # optional: fetch another page first
+  name: token                                      # form field to include in the request
+  search: "token = '([a-z0-9]{32})"                # regex to extract token
 
-# To apply proxy setting use this option.
+# proxy support
 proxy:
-    # v1 way (deprecated, soon will be removed)
-    socks: socks5://127.0.0.1:9050?timeout=5s # for Tor proxy
+  # legacy (v1) example (deprecated)
+  socks: "socks5://127.0.0.1:9050?timeout=5s"
 
-    # v2 way
-    addr: socks5://127.0.0.1:9050
-    timeout: 5s # optional
-    verify_url: http://httpbin.org/ip # custom URL for checking if the proxy is working properly
-    
-# email settings
+  # v2 (recommended)
+  addr: "socks5://127.0.0.1:9050"
+  timeout: 5s
+  verify_url: "http://httpbin.org/ip"  # optional check URL
+
+# email alerts on success
 email:
-  # Email settings that will send the email
   server:
-    host: your.server.name
+    host: smtp.example.com
     port: 587
-    timeout: 3 # default 30
-    email: your.email@address.com
-    password: your.password123
-  # mail settings
+    timeout: 3
+    email: your.email@example.com
+    password: your.smtp.password
   mail:
-    # method 1
-    recipients: your.email@address.com
-    
-    # method 2 for multiple recipients
     recipients:
-      - your.email@address.com
-      - another.email@address.com
-      - random.email@address.com
-    subject: Your subject text is here
-    name: Who Am I?
-    message: "Password: <password>" # a real password will appear in <password> place.
+      - you@example.com
+      - team@example.com
+    subject: "Enraijin: password found"
+    name: "Enraijin"
+    message: "Password: <password>"
 ```
-<p>And that's it, now you are a professional cracker.</p>
+
+Notes:
+- "from" selects where candidate passwords come from:
+  - file: path to a wordlist
+  - list: inline small lists (useful for quick checks)
+  - stdin: pipe from other programs like crunch (be careful with memory and long runs)
+- If both message and status_code are provided in on_pass/on_fail, both are used to determine outcome (configurable per version).
+
+---
+
+# 🔁 Importing, include, and deprecated parameter
+
+- import: completely replaces the current config with another file (useful for managed projects).
+
+Deprecated parameter
+- The older parameter named `include` is deprecated and has been fully replaced by `import`.
+- If you see `include: <file>` in your configs, change it to `import: <file>`.
+
+Migration example:
+
+Old (deprecated):
+```yaml
+# deprecated usage — DO NOT use
+include: my-project.yml
+```
+
+New (use this):
+```yaml
+# preferred
+import: my-project.yml
+```
+
+---
+
+# 🔌 Plugins: loading, Agentix, and Proxmania
+
+Enraijin supports loading plugins as shared objects (.so). Plugins are added under the `bruteforce` section using the `plugins` key. Two formats are accepted:
+
+- Single plugin (string):
+```yaml
+bruteforce:
+  plugins: ./plugins/proxmania/proxmania.so
+```
+
+- Multiple plugins (list):
+```yaml
+bruteforce:
+  plugins:
+    - ./plugins/proxmania/proxmania.so
+    - ./plugins/agentix/agentix.so
+```
+
+When the binary loads plugins, it will attempt to initialize them. Plugin availability may depend on how the binary was built (plugins may be optional in some releases). Plugins should be placed in a plugins directory inside the project or referenced by absolute path.
+
+Plugin behavior and configuration:
+- Plugins may expose their own configuration sections at the top level of the YAML (example: `proxmania:`). The plugin loader will read those sections and pass them to the plugin during initialization.
+- If a plugin does not implement configuration handling yet, it will run with built-in defaults.
+
+Proxmania (example plugin configuration)
+- Purpose: fetch, validate, and rotate proxies from an external source (example uses a public dataset URL).
+
+Example config:
+```yaml
+proxmania:
+  # URL to fetch the SOCKS5 proxy data set
+  proxy_data_set: "https://raw.githubusercontent.com/proxifly/free-proxy-list/refs/heads/main/proxies/protocols/socks5/data.txt"
+
+  # maximum number of proxies to use
+  max_proxies: 15
+
+  # timeout for each proxy request
+  timeout: 30s
+```
+
+Notes on Proxmania:
+- The plugin will download the proxy list from `proxy_data_set`, validate proxies (respecting `timeout`), and keep up to `max_proxies` in the local pool.
+- The plugin typically hands proxies to Enraijin, which then assigns them to threads. Check plugin logs for detailed behavior and rate-limit handling.
+- Keep API/data URLs and provider limits in mind; do not overload public services.
+
+Agentix (current status)
+- Purpose: rotate user-agents, randomize headers, and add per-agent session handling (reduces fingerprinting).
+- Configuration: at the time of this writing, Agentix has no configuration implemented — if you load the plugin, it will run with built-in defaults. The plugin is being prepared for configurable options (user agent lists, rotation mode, jitter, etc.) in a future release.
+
+Security & best practices
+- Keep secrets (API keys or provider credentials) out of committed configs. Use environment variables or an external secrets manager if possible.
+- Start with small thread counts and small proxy pools when enabling rotation. Validate plugin behavior in a short smoke test before long runs.
+
+---
+
+# Common workflows & examples
+
+1. Quick run with a local wordlist:
+   ```sh
+   ./enraijin
+   ```
+
+2. Pipe from stdin (e.g., crunch):
+   ```sh
+   crunch 8 8 0123456789 | ./enraijin
+   ```
+
+3. Use Tor via SOCKS5 (ensure Tor is running):
+   ```yaml
+   proxy:
+     addr: "socks5://127.0.0.1:9050"
+     timeout: 5s
+   ```
+
+4. Save results to a file:
+   ```yaml
+   bruteforce:
+     output: /home/me/targets/siteA.txt
+   ```
+
+---
+
+# Proxy, crawling & token extraction
+
+- Proxy support is built-in with a v2 configuration (addr + timeout + verify_url). A legacy v1 `socks` option exists but is deprecated.
+- Crawl option fetches a page (may be the same as the host or a separate URL), runs a regex against the response to extract a token, then injects the token into the configured `name` for subsequent requests.
+- Regex must be a quoted pattern; capture group 1 will be used.
+
+Example crawl config:
+```yaml
+crawl:
+  url: "https://website.com/session"
+  name: csrf_token
+  search: "<input name=\"csrf_token\" value=\"([a-z0-9]{32})\""
+```
+
+---
+
+# Email notifications
+
+Configure your SMTP server and recipient list to receive an email when a credential is found. Replace placeholders with secure credentials and consider using app-specific passwords or a throwaway relay for testing.
+
+---
+
+# Troubleshooting & tips
+
+- If candidates from stdin stop abruptly, check resource usage — piping massive lists can consume memory depending on version/platform.
+- Use conservative `threads` on production web servers to avoid crashing services and to reduce the chance of being blocked.
+- Use `no_verbose: true` for long runs to reduce stdout noise and log only successes.
+- Add `verify_url` under `proxy` to ensure proxy checks before brute-forcing.
+- When using plugins, run a short dry-run to confirm plugin behavior (rotation, pool size, API limits). Check plugin logs/outputs for initialization details.
+- If a plugin fails to load, verify the .so path and that the binary supports plugin loading (some releases may be built without plugin support).
+
+---
+
+# 📅 TODO & changelog (high level)
+
+- [x] Proxy Feature
+  - commit: ba5ab6f (see Releases)
+  - changelog: v2.3-beta
+- [x] Import config option
+  - commit: 823b14f
+  - changelog: v2.3-beta
+- [x] Email notifications
+  - commit: a98c463
+  - changelog: v2.4.3
+- [ ] Agentix plugin: add configuration support (planned)
+- [ ] Improve plugin docs and examples in releases
+
+If you have feature suggestions, please open an issue with the "enhancement" label.
+
+---
+
+# Contributing
+
+Contributions, bug reports, and ideas are welcome. Open an issue or submit a PR. Please include reproducible steps and config files (redacting any secrets).
+
+---
+
+# License
+
+Check the LICENSE file in the repository for license details.
+
+---
+
+Thanks for trying Enraijin — keep things legal and responsible.
