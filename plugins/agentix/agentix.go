@@ -6,14 +6,14 @@ import (
 	"github.com/narukoshin/EnRaiJin/v2/pkg/middleware"
 )
 
-type UserAgentPlugin struct{}
+type Agentix struct{}
 
 var (
 	Version string = "v2.0.0"
 	Author  string = "Naru Koshin"
 
-	_ middleware.Plugin = UserAgentPlugin{}
-	Plugin = UserAgentPlugin{}
+	_ middleware.Plugin = Agentix{}
+	Plugin = Agentix{}
 
 	DefaultUserAgents = []string{
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
@@ -36,7 +36,7 @@ func RandomUserAgent() string {
 
 // Middleware returns a middleware that sets a random User-Agent header for every HTTP request.
 // It wraps the given next RoundTripper and sets the User-Agent header before calling it.
-func (p UserAgentPlugin) Middleware() middleware.ClientMiddleware {
+func (p Agentix) Middleware() middleware.ClientMiddleware {
 	return func(next http.RoundTripper) http.RoundTripper {
 		return middleware.RoundTripFunc(func(req *http.Request) (*http.Response, error) {
 			req.Header.Set("User-Agent", RandomUserAgent())
