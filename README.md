@@ -48,8 +48,8 @@ If you need protocol-level cracking (FTP, SSH, RDP, etc.), consider Ncrack or ot
 Clone the repo:
 
 ```sh
-git clone https://github.com/narukoshin/custom-bruteforce
-cd custom-bruteforce
+git clone https://github.com/narukoshin/EnRaiJin
+cd EnRaiJin
 ```
 
 Build or download a release from the Releases page, then run the binary:
