@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy/v2"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy"
 	"github.com/walle/targz"
 )
 
@@ -70,8 +70,8 @@ func init() {
 func Get_Release() (Release, error) {
 	client := &http.Client{}
 	// Applying proxy settings if they are available
-	if v2.IsProxy(){
-		err := v2.Apply(client)
+	if proxy.IsProxy() {
+		err := proxy.Apply(client)
 		if err != nil {
 			return Release{}, err
 		}
@@ -200,8 +200,8 @@ func InstallUpdate(currentVersion string, mode Mode) error {
 
 			client := &http.Client{}
 			// Applying proxy settings if they are available
-			if v2.IsProxy(){
-				err = v2.Apply(client)
+			if proxy.IsProxy() {
+				err = proxy.Apply(client)
 				if err != nil {
 					return err
 				}

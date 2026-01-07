@@ -1,6 +1,7 @@
 package bruteforce
 
 import (
+	"slices"
 	"bufio"
 	"bytes"
 	"crypto/tls"
@@ -17,106 +18,105 @@ import (
 	"strings"
 	"sync"
 	"time"
-	
+
 	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/middleware"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/headers"
-	proxy "github.com/narukoshin/EnRaiJin/v2/pkg/proxy/v2"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/middleware"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/site"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/structs"
 )
 
 var (
-	Types_Available []string 	= []string{"list", "file", "stdin"}
+	Types_Available []string = []string{"list", "file", "stdin"}
 
-	Field 	string 				= config.YAMLConfig.B.Field
-	From  	string 				= config.YAMLConfig.B.From
-	File	string				= config.YAMLConfig.B.File
-	List	[]string			= config.YAMLConfig.B.List
-	Fail	structs.YAMLOn_fail = config.YAMLConfig.OF
-	Pass	structs.YAMLOn_pass = config.YAMLConfig.OP
-	Threads int					= config.YAMLConfig.B.Threads
-	NoVerbose bool				= config.YAMLConfig.B.NoVerbose
-	Output	string				= config.YAMLConfig.B.Output
+	Field     string              = config.YAMLConfig.B.Field
+	From      string              = config.YAMLConfig.B.From
+	File      string              = config.YAMLConfig.B.File
+	List      []string            = config.YAMLConfig.B.List
+	Fail      structs.YAMLOn_fail = config.YAMLConfig.OF
+	Pass      structs.YAMLOn_pass = config.YAMLConfig.OP
+	Threads   int                 = config.YAMLConfig.B.Threads
+	NoVerbose bool                = config.YAMLConfig.B.NoVerbose
+	Output    string              = config.YAMLConfig.B.Output
 
 	// status_code for on_fail and on_pass
-	OFStatusCode int			= config.YAMLConfig.OF.StatusCode
-	OPStatusCode int			= config.YAMLConfig.OP.StatusCode
+	OFStatusCode int = config.YAMLConfig.OF.StatusCode
+	OPStatusCode int = config.YAMLConfig.OP.StatusCode
 
-	IgnoreTLS bool				= config.YAMLConfig.S.IgnoreTLS
+	IgnoreTLS bool = config.YAMLConfig.S.IgnoreTLS
 
 	// debug will show the response body of the request
-	Debug 	  bool				= config.YAMLConfig.B.Debug
+	Debug bool = config.YAMLConfig.B.Debug
 
 	// Crawl
-	Crawl_Search string 		= config.YAMLConfig.C.Search
-	Crawl_Url	 string 		= config.YAMLConfig.C.Url
-	Crawl_Name	 string 		= config.YAMLConfig.C.Name
+	Crawl_Search string = config.YAMLConfig.C.Search
+	Crawl_Url    string = config.YAMLConfig.C.Url
+	Crawl_Name   string = config.YAMLConfig.C.Name
 
 	// some status messages
-	StatusFinished string 		= "finished"
-	StatusFound	string 			= "found"
+	StatusFinished string = "finished"
+	StatusFound    string = "found"
 
 	Attack Attack_Result
 
 	Start_Time time.Time
 
 	// adding some error messages
-	ErrNoPasswords 				= errors.New("there is no passwords available for bruteforce, please specify some passwords")
-	ErrOpeningWordlist 			= errors.New("we have issues with opening a wordlist file, make sure that file exists and is readable")
-	ErrWrongType   				= errors.New("you specified the wrong source of dictionary, allowed types are (file, list)")
-	ErrEmptyField  				= errors.New("the field that you want to bruteforce is empty")
-	ErrTooMuchThreads			= errors.New("too much threads for such small wordlist, please decrease amount of threads") 
-	ErrUnixRequired     		= errors.New("you can not use this feature on Windows, you can use WSL instead")
-	ErrMissingGroup				= errors.New("you forget to add group to the crawl/search option")
-	ErrNoCrawlName				= errors.New("you forget to add the name of the field for token, without that option we can't set the token")
-	ErrThreadsLessZero			= errors.New("threads can't be less than zero, zero threads default value is 5")
+	ErrNoPasswords     = errors.New("there is no passwords available for bruteforce, please specify some passwords")
+	ErrOpeningWordlist = errors.New("we have issues with opening a wordlist file, make sure that file exists and is readable")
+	ErrWrongType       = errors.New("you specified the wrong source of dictionary, allowed types are (file, list)")
+	ErrEmptyField      = errors.New("the field that you want to bruteforce is empty")
+	ErrTooMuchThreads  = errors.New("too much threads for such small wordlist, please decrease amount of threads")
+	ErrUnixRequired    = errors.New("you can not use this feature on Windows, you can use WSL instead")
+	ErrMissingGroup    = errors.New("you forget to add group to the crawl/search option")
+	ErrNoCrawlName     = errors.New("you forget to add the name of the field for token, without that option we can't set the token")
+	ErrThreadsLessZero = errors.New("threads can't be less than zero, zero threads default value is 5")
 )
 
 type Attack_Result struct {
-	Status		string
-	Password	string
-	Stop 		bool
+	Status       string
+	Password     string
+	Stop         bool
 	ErrorMessage string
 }
 
 type Attack_Fail struct {
-	Password string
+	Password  string
 	Try_count int
 }
 
 var AttackFail Attack_Fail
 
-// verifying if the list type is correct, currently there is only two types available - file and list
-func verify_type() bool{
-	for _, t := range Types_Available {
-		if From == t {
-			return true
-		}
-	}
-	return false
-}
 
-// Loading dictionary from file or from the list that is defined in the config file
+// verify_type checks if the type of the source of the dictionary is valid.
+// It will return true if the type is valid, and false otherwise.
+// Valid types are (file, list, stdin).
+func verify_type() bool {
+	return slices.Contains(Types_Available, From)
+}
+// Dictionary reads the dictionary from the specified source.
+// It returns a list of strings and an error if there is an issue with the source.
+// The source can be either a file or a list of strings.
 func Dictionary() ([][]string, error) {
 	var wordlist []string
 	// Verifying that the source of the dictionary is allowed
 	if ok := verify_type(); !ok {
 		return nil, ErrWrongType
 	}
-	switch(From){
-		case "list":
-			wordlist = List
-		case "file":
-			contents, err := os.ReadFile(File)
-			if err != nil {
-				return nil, ErrOpeningWordlist
-			}
-			wordlist = strings.Split(string(contents), "\n")
+	switch From {
+	case "list":
+		wordlist = List
+	case "file":
+		contents, err := os.ReadFile(File)
+		if err != nil {
+			return nil, ErrOpeningWordlist
+		}
+		wordlist = strings.Split(string(contents), "\n")
 	}
 	// Checking if the last element of the list is not empty
-	// If the last element is empty, then we are deleting it 
+	// If the last element is empty, then we are deleting it
 	{
 		if len(wordlist) != 0 {
 			if len(wordlist[len(wordlist)-1]) == 0 {
@@ -128,7 +128,7 @@ func Dictionary() ([][]string, error) {
 	if len(wordlist) == 0 {
 		return nil, ErrNoPasswords
 	}
-	
+
 	// spliting the wordlist for eaxh thread
 	// To split a wordlist we need to know how much threads we want to use, if threads are not set, we will set them to default one
 	if Threads == 0 {
@@ -148,7 +148,7 @@ func Dictionary() ([][]string, error) {
 		return nil, ErrTooMuchThreads
 	}
 	// the brain of spliting
-	for i := 0; i < len(wordlist); i += size{
+	for i := 0; i < len(wordlist); i += size {
 		end := i + size
 		// for the last element
 		if end > len(wordlist) {
@@ -177,7 +177,12 @@ func Dictionary() ([][]string, error) {
 	return result, nil
 }
 
-// The function where all the magic happens
+// Start starts the brute-force attack.
+// It will print out a message if no-verbose mode is enabled,
+// if requests are proxied and if debugging is enabled.
+// It will also set the default on_pass status code to 200 if it is not set.
+// If the source of the dictionary is stdin, it will check if the OS is not Windows.
+// If the OS is Windows, it will return an error.
 func Start() error {
 	// starting the timer
 	Start_Time = time.Now()
@@ -275,7 +280,9 @@ func Start() error {
 	return nil
 }
 
-// launching the thread brute-force attack
+// _run_attack runs a single attempt of the brute-force attack.
+// It applies the proxy tunnel to the request if proxy is enabled,
+// and ignores TLS verification if IgnoreTLS is true.
 func _run_attack(pass string) error {
 	if !Attack.Stop {
 		client := &http.Client{
@@ -308,7 +315,7 @@ func _run_attack(pass string) error {
 			d[Field] = pass
 			a, err := json.Marshal(d)
 			if err != nil {
-			  return err
+				return err
 			}
 			data = bytes.NewReader(a)
 		} else {
@@ -317,7 +324,7 @@ func _run_attack(pass string) error {
 			if Crawl_Search != "" {
 				token := Find_Token(client)
 				values.Set(Crawl_Name, token)
-			} 
+			}
 			for _, field := range site.Fields {
 				values.Set(field.Name, field.Value)
 			}
@@ -337,12 +344,12 @@ func _run_attack(pass string) error {
 		defer req.Body.Close()
 
 		if headers.Is() {
-			for _, header := range headers.Get(){
+			for _, header := range headers.Get() {
 				req.Header.Set(header.Name, header.Value)
 			}
 		}
-		mw := middleware.Middleware {
-			Client: client,
+		mw := middleware.Middleware{
+			Client:  client,
 			Request: req,
 		}
 		// sending the request through the middleware
@@ -361,11 +368,14 @@ func _run_attack(pass string) error {
 
 			if AttackFail.Try_count == 10 {
 				password_try, _ := json.Marshal(AttackFail)
-                Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: fmt.Sprintf("Something went wrong / \n\t%s / \n\tPassword try: %q", err, string(password_try))}
+				Attack = Attack_Result{Status: StatusFinished, Stop: true, ErrorMessage: fmt.Sprintf("Something went wrong / \n\t%s / \n\tPassword try: %q", err, string(password_try))}
 				return nil
 			}
 
 			_run_attack(pass)
+
+			// adding a throttle / default is 0s
+			time.Sleep(config.YAMLConfig.B.Throttle)
 		}
 		// Resetting fail count in case it recovered and moved to other passwords.
 		AttackFail = Attack_Fail{}
@@ -374,13 +384,13 @@ func _run_attack(pass string) error {
 			return nil
 		}
 		defer resp.Body.Close()
-		
+
 		if Debug {
 			fmt.Println(resp)
 		}
 		// if server says that page doesn't exists then we are stopping the script.
 		// TODO: that would be a good idea to add an ignore option for this.
-		if resp.StatusCode == http.StatusNotFound{
+		if resp.StatusCode == http.StatusNotFound {
 			if Debug {
 				body, err := io.ReadAll(resp.Body)
 				if err != nil {
@@ -388,7 +398,7 @@ func _run_attack(pass string) error {
 				}
 				fmt.Println(string(body))
 			}
-			Attack = Attack_Result {Status: StatusFinished, Stop: true, ErrorMessage: "The server says 404"}
+			Attack = Attack_Result{Status: StatusFinished, Stop: true, ErrorMessage: "The server says 404"}
 			return nil
 		} else {
 			body, err := io.ReadAll(resp.Body)
@@ -401,8 +411,8 @@ func _run_attack(pass string) error {
 			}
 			// some tests on status codes
 			if resp.StatusCode != OFStatusCode && resp.StatusCode == OPStatusCode {
-				if ((len(Fail.Message) != 0 && !strings.Contains(string(body), Fail.Message)) && (len(Pass.Message) == 0) || (len(Pass.Message) != 0 && strings.Contains(string(body), Pass.Message))) {
-					Attack = Attack_Result {Status: StatusFound, Password: pass, Stop: true}
+				if (len(Fail.Message) != 0 && !strings.Contains(string(body), Fail.Message)) && (len(Pass.Message) == 0) || (len(Pass.Message) != 0 && strings.Contains(string(body), Pass.Message)) {
+					Attack = Attack_Result{Status: StatusFound, Password: pass, Stop: true}
 					return nil
 				}
 			}
@@ -412,17 +422,19 @@ func _run_attack(pass string) error {
 	return nil
 }
 
-// message that will be printed while the script is running
-func _while_running(pass string){
+// _while_running is a helper function for _run_attack. It prints out a message to the console if NoVerbose is false, indicating that the script is trying a new password.
+func _while_running(pass string) {
 	if !NoVerbose {
 		fmt.Printf("\033[34m[~] trying password: %v\033[0m\n", pass)
 	}
 }
 
-// message that will be printed out when the script is finished
-func _attack_finished() (err error){
+// _attack_finished checks if the attack is stopped and the password is found.
+// If the conditions are met, it prints out a message to the console with the found password and elapsed time.
+// It also saves the password to the file if the "output" option is added and sends an email if enabled.
+func _attack_finished() (err error) {
 	// checking if the attack is stopped and the password is found
-	if Attack.Stop && Attack.Status == StatusFound  && Attack.Password != "" {
+	if Attack.Stop && Attack.Status == StatusFound && Attack.Password != "" {
 		started := Start_Time.Format("2006-01-02 15:04:05")
 		fmt.Printf("\033[32m[~] the thing that you were looking for is found: %v\033[0m\n", Attack.Password)
 		fmt.Printf("\033[32m[~] elapsed time: %v, started %v\033[0m\n", time.Since(Start_Time), started)
@@ -444,8 +456,8 @@ func _attack_finished() (err error){
 	return
 }
 
-// Saving the password in the file
-func WritePasswordToFile(){
+// WritePasswordToFile will write the found password to the file if the "output" option is specified in the config file.
+func WritePasswordToFile() {
 	// checking if the "output" option is added
 	if len(Output) != 0 {
 		// writting password to the file
@@ -453,7 +465,15 @@ func WritePasswordToFile(){
 	}
 }
 
-// Crawling out the token
+// Bypassing_Security_Token will make a GET request to the specified URL and then
+// will try to find the security token in the response body. If the token is found, it will be returned.
+// If the token is not found, an error will be returned.
+// If the request fails, an error will be returned.
+// If the Crawl_Search option is specified, the function will try to find the token using regular expression.
+// If the token is not found with the regular expression, an error will be returned.
+// If the Crawl_Url option is specified, the function will make a GET request to that URL.
+// If the Crawl_Url option is not specified, the function will make a GET request to the site.Host.
+// If the headers.Is() function returns true, the function will add the headers to the request.
 func Bypassing_Security_Token(client *http.Client) (string, error) {
 	var Token_Uri string
 	if len(Crawl_Url) != 0 {
@@ -466,9 +486,8 @@ func Bypassing_Security_Token(client *http.Client) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// defer req.Body.Close()
 	if headers.Is() {
-		for _, header := range headers.Get(){
+		for _, header := range headers.Get() {
 			req.Header.Set(header.Name, header.Value)
 		}
 	}
@@ -492,21 +511,23 @@ func Bypassing_Security_Token(client *http.Client) (string, error) {
 	return "", nil
 }
 
-// finding the token
+// Find_Token finds the security token using the Bypassing_Security_Token function.
+// If the request failed to get the token, it will repeat the request again until it's successful.
+// If the Crawl_Name option is not specified, it will return an empty string and set the Attack status to StatusFinished and stop to true.
 func Find_Token(client *http.Client) (token string) {
 	var err error
 	// finding the token
 	try_again:
-		token, err = Bypassing_Security_Token(client)
-		if err != nil {
-			// if the request failed to get the token, repeating the request again until it's successful.
-			goto try_again
-		}
+	token, err = Bypassing_Security_Token(client)
+	if err != nil {
+		// if the request failed to get the token, repeating the request again until it's successful.
+		goto try_again
+	}
 	// Checking if the Crawl_Name is added because it's a very important option
 	if len(Crawl_Name) == 0 {
-		Attack = Attack_Result {
+		Attack = Attack_Result{
 			Status: StatusFinished,
-			Stop: true,
+			Stop:   true,
 		}
 		return ""
 	}
