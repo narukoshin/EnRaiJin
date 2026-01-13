@@ -2,8 +2,8 @@
 # this file will be ignored then and the config will be loaded from this option
 import: example.yml # optional
 
-# You can also include config by separate files
-include:
+# below this line are the import options if you want to load your config from multiple files
+import:
   - file1.yml
   - website.com/file2.yml
 
@@ -35,8 +35,13 @@ bruteforce: # required
   
   threads: 20 # optional | default: 5
 
-  # add a custom code to the request
+  # add an external plugin for custom behaviour that will act as a middleware
   plugin: plugins/my-plugin/my-plugin.so # optional
+
+  # multiple plugins
+  plugins:
+    - plugins/plugin1.so
+    - plugins/plugin2.so
 
   # print debug messages
   debug: true # optional

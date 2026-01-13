@@ -7,21 +7,21 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	
+
 	"github.com/narukoshin/EnRaiJin/v2/pkg/common"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/proxy"
 	"github.com/narukoshin/EnRaiJin/v2/pkg/structs"
-	proxy "github.com/narukoshin/EnRaiJin/v2/pkg/proxy/v2"
 )
 
 var (
-	Host 	string	= config.YAMLConfig.S.Host
-	Method 	string  = config.YAMLConfig.S.Method
-	Fields  []structs.YAMLFields = config.YAMLConfig.F
+	Host   string               = config.YAMLConfig.S.Host
+	Method string               = config.YAMLConfig.S.Method
+	Fields []structs.YAMLFields = config.YAMLConfig.F
 
 	// Error message if the request method in the config is incorrect
 	ErrInvalidMethod = errors.New("please specify a valid request method")
-	ErrDeadHost		 = errors.New("looks that the host is not alive, check your config again")
+	ErrDeadHost      = errors.New("looks that the host is not alive, check your config again")
 
 	// All request methods that are allowed to use
 	Methods_Allowed []string = []string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"}
@@ -53,7 +53,7 @@ func Verify_Host() error {
 	port := common.FindPort(url)
 	// checking if the host is alive
 
-	if proxy.IsProxy(){ // checking with the proxy
+	if proxy.IsProxy() { // checking with the proxy
 		dialer, err := proxy.Dial("")
 		if err != nil {
 			return err
@@ -62,7 +62,7 @@ func Verify_Host() error {
 			return err
 		}
 	} else { // checking without the proxy
-		if _, err = net.DialTimeout("tcp", net.JoinHostPort(url.Host, fmt.Sprintf("%d", port)), 3 * time.Second); err != nil {
+		if _, err = net.DialTimeout("tcp", net.JoinHostPort(url.Host, fmt.Sprintf("%d", port)), 3*time.Second); err != nil {
 			return ErrDeadHost
 		}
 	}

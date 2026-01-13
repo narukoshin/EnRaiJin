@@ -3,15 +3,15 @@ package app
 import (
 	"fmt"
 	"os"
-	
-	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/updater"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/site"
-	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
+
 	"github.com/narukoshin/EnRaiJin/v2/pkg/bruteforce"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/config"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/mail"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/site"
+	"github.com/narukoshin/EnRaiJin/v2/pkg/updater"
 )
 
-const Version string = "v2.7.0"
+const Version string = "v2.7.1"
 
 // Run is the main function of the EnRaiJin tool. It checks if there's any command used,
 // checks for updates, verifies the config, target host, and request method, and

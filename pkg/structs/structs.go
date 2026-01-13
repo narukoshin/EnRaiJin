@@ -1,5 +1,9 @@
 package structs
 
+import (
+	"time"
+)
+
 type YAMLFields struct {
 	Name  string `yaml:"name"`
 	Value string `yaml:"value"`
@@ -14,8 +18,8 @@ type YAMLBruteforce struct {
 	NoVerbose bool     `yaml:"no_verbose"`
 	Output    string   `yaml:"output"`
 	Debug     bool     `yaml:"debug"`
-	// Plugin	  string   `yaml:"plugin"` // remove
 	Plugin 	  any 	   `yaml:"plugin"`
+	Throttle  time.Duration `yaml:"throttle" default:"0s"`
 }
 
 type YAMLSite struct {
@@ -44,10 +48,6 @@ type YAMLConfig struct {
 }
 
 type YAMLProxy struct {
-	// v1
-	Socks string `yaml:"socks"`
-
-	// v2
 	Addr string `yaml:"addr"`
 	Timeout string `yaml:"timeout"`
 	VerifyUrl string `yaml:"verify_url"`
